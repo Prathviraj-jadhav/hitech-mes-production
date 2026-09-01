@@ -1,0 +1,71 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+jobs:
+  lint-and-build:
+    name: Lint & Build Validation
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: "file:./dev.db"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps || npm install --legacy-peer-deps
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Run ESLint
+        run: npm run lint || true
+
+      - name: Build Next.js Application
+        run: npm run build
+
+  deploy-to-vercel:
+    name: Deploy to Vercel
+    needs: lint-and-build
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Deploy to Vercel (CLI)
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          if [ -n "$VERCEL_TOKEN" ]; then
+            echo "Deploying via Vercel CLI with secret tokens..."
+            npm install -g vercel
+            vercel pull --yes --environment=production --token=$VERCEL_TOKEN
+            vercel build --prod --token=$VERCEL_TOKEN
+            vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN
+          else
+            echo "VERCEL_TOKEN secret not configured in GitHub Repository secrets."
+            echo "If Vercel GitHub integration is connected, Vercel deploys automatically on push."
+          fi

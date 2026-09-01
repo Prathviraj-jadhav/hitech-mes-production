@@ -1,0 +1,425 @@
+// Hi-Tech Radiators MES - Prisma Schema
+// Production-grade database schema for Manufacturing Execution System
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// === Core Models ===
+
+model Plant {
+  id        String   @id @default(cuid())
+  code      String   @unique // K1, K2, K3, K4, R1
+  name      String
+  location  String
+  since     String
+  role      String
+  lines     String   // JSON array of line names
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workOrders       WorkOrder[]
+  machines         Machine[]
+  inventoryItems   InventoryItem[]
+  operators        Operator[]
+  alerts           Alert[]
+  ncrs             NCR[]
+  shipments        Shipment[]
+  maintenanceOrders MaintenanceOrder[]
+  qualityRecords   QualityRecord[]
+  calibrationItems CalibrationItem[]
+  shiftHandovers   ShiftHandoverEntry[]
+}
+
+model WorkOrder {
+  id            String   @id @default(cuid())
+  woNumber      String   @unique // WO-2400
+  orderNo       String   // SO-08100
+  product       String
+  customer      String
+  plantCode     String
+  line          String
+  qty           Int
+  qtyDone       Int      @default(0)
+  qtyScrap      Int      @default(0)
+  status        String   @default("released") // released, started, in-progress, on-hold, completed, closed
+  priority      String   @default("normal") // rush, high, normal, low
+  startDate     DateTime
+  dueDate       DateTime
+  progress      Int      @default(0)
+  heatNumber    String?
+  currentStage  String
+  operator      String?
+  oee           Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  plant         Plant    @relation(fields: [plantCode], references: [code])
+  qualityRecords QualityRecord[]
+  traceEvents   TraceEvent[]
+
+  @@index([plantCode])
+  @@index([status])
+}
+
+model Machine {
+  id            String   @id @default(cuid())
+  machineId     String   @unique // M-K1-001
+  name          String
+  plantCode     String
+  line          String
+  type          String
+  state         String   @default("idle") // running, idle, down, changeover, offline
+  oee           Int      @default(0)
+  availability  Int      @default(0)
+  performance   Int      @default(0)
+  quality       Int      @default(0)
+  cycleTime     Int      @default(0)
+  idealCycle    Int      @default(0)
+  parameters    String   // JSON array of {label, value, unit}
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  plant         Plant    @relation(fields: [plantCode], references: [code])
+  maintenanceOrders MaintenanceOrder[]
+}
+
+model InventoryItem {
+  id            String   @id @default(cuid())
+  sku           String   @unique
+  description   String
+  type          String   // raw, wip, fg, consumable, spare
+  plantCode     String
+  location      String
+  quantity      Float
+  unit          String
+  heatNumber    String?
+  supplier      String?
+  reorderLevel  Float    @default(0)
+  lastMovement  DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  plant         Plant    @relation(fields: [plantCode], references: [code])
+}
+
+model QualityRecord {
+  id            String   @id @default(cuid())
+  qcId          String   @unique // QC-05800
+  serial        String
+  stage         String
+  inspector     String
+  result        String   @default("pending") // pass, fail, hold, pending
+  value         Float?
+  spec          String?
+  unit          String?
+  timestamp     DateTime @default(now())
+  plantCode     String
+  notes         String?
+  workOrderId   String?
+  createdAt     DateTime @default(now())
+
+  plant         Plant         @relation(fields: [plantCode], references: [code])
+  workOrder     WorkOrder?    @relation(fields: [workOrderId], references: [id])
+
+  @@index([plantCode])
+  @@index([result])
+}
+
+model TraceEvent {
+  id            String   @id @default(cuid())
+  eventId       String   @unique // TE-09000
+  serial        String
+  stage         String
+  timestamp     DateTime @default(now())
+  operator      String
+  machine       String
+  result        String   @default("pass") // pass, fail, hold
+  data          String   // JSON array of {label, value}
+  workOrderId   String?
+  createdAt     DateTime @default(now())
+
+  workOrder     WorkOrder? @relation(fields: [workOrderId], references: [id])
+
+  @@index([serial])
+}
+
+model Operator {
+  id            String   @id @default(cuid())
+  operatorId    String   @unique // OP-001
+  name          String
+  role          String
+  plantCode     String
+  certifications String  // JSON array of {type, validUntil, status}
+  skills        String   // JSON array of {skill, level}
+  shift         String   // A, B, C
+  productivity  Int      @default(0)
+  utilization   Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  plant         Plant    @relation(fields: [plantCode], references: [code])
+}
+
+model Alert {
+  id            String   @id @default(cuid())
+  alertId       String   @unique // AL-001
+  severity      String   @default("info") // info, warning, critical
+  module        String
+  title         String
+  description   String
+  plantCode     String?
+  timestamp     DateTime @default(now())
+  acknowledged  Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  plant         Plant?   @relation(fields: [plantCode], references: [code])
+
+  @@index([severity])
+  @@index([acknowledged])
+}
+
+model NCR {
+  id                 String   @id @default(cuid())
+  ncrId              String   @unique // NCR-008
+  title              String
+  description        String
+  plantCode          String
+  stage              String
+  severity           String   @default("minor") // critical, major, minor
+  status             String   @default("open") // open, investigating, containment, root-cause, capa-open, verified, closed
+  source             String   @default("in-process") // incoming, in-process, final-qc, customer, audit, supplier
+  raisedBy           String
+  raisedAt           DateTime @default(now())
+  affectedSerials    String   // JSON array
+  affectedQty        Int      @default(0)
+  rootCause          String?
+  capaAction         String?
+  capaOwner          String?
+  capaDue            DateTime?
+  containmentAction  String?
+  daysOpen           Int      @default(0)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  plant              Plant    @relation(fields: [plantCode], references: [code])
+
+  @@index([plantCode])
+  @@index([status])
+}
+
+model MaintenanceOrder {
+  id            String   @id @default(cuid())
+  moId          String   @unique // MT-001
+  asset         String
+  plantCode     String
+  type          String   @default("preventive") // preventive, corrective, predictive, calibration
+  priority      String   @default("normal") // rush, high, normal, low
+  status        String   @default("open") // open, in-progress, completed, scheduled
+  assignedTo    String?
+  dueDate       DateTime
+  mtbf          Int?
+  mttr          Int?
+  machineId     String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  plant         Plant    @relation(fields: [plantCode], references: [code])
+  machine       Machine? @relation(fields: [machineId], references: [id])
+
+  @@index([plantCode])
+  @@index([status])
+}
+
+model Shipment {
+  id            String   @id @default(cuid())
+  manifestNo    String   @unique
+  customer      String
+  orderNo       String
+  plantCode     String
+  destination   String
+  carrier       String
+  vehicleNo     String
+  driver        String
+  lrNo          String
+  status        String   @default("scheduled") // loading, in-transit, delivered, delayed, scheduled
+  units         Int
+  weight        Float
+  value         Float
+  loadingDate   DateTime
+  eta           DateTime
+  deliveredDate DateTime?
+  documents     String   // JSON array of {label, status}
+  coordinates   String?  // JSON {lat, lng, progress}
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  plant         Plant    @relation(fields: [plantCode], references: [code])
+
+  @@index([plantCode])
+  @@index([status])
+}
+
+model CalibrationItem {
+  id            String   @id @default(cuid())
+  calId         String   @unique // CAL-001
+  instrument    String
+  tag           String
+  plantCode     String
+  location      String
+  type          String
+  range         String
+  accuracy      String
+  lastCalibrated DateTime
+  nextDue       DateTime
+  frequency     String
+  status        String   @default("valid") // valid, due-soon, overdue, in-progress
+  certNo        String
+  vendor        String
+  criticality   String   @default("major") // critical, major, minor
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  plant         Plant    @relation(fields: [plantCode], references: [code])
+
+  @@index([plantCode])
+  @@index([status])
+}
+
+model ShiftHandoverEntry {
+  id            String   @id @default(cuid())
+  entryId       String   @unique // SH-001
+  shift         String   // A, B, C
+  date          String
+  fromOperator  String
+  toOperator    String
+  type          String   @default("note") // note, issue, achievement, handover, escalation
+  title         String
+  details       String
+  plantCode     String
+  priority      String   @default("normal")
+  acknowledged  Boolean  @default(false)
+  timestamp     DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  plant         Plant    @relation(fields: [plantCode], references: [code])
+
+  @@index([plantCode])
+}
+
+model Document {
+  id            String   @id @default(cuid())
+  docId         String   @unique // DOC-001
+  name          String
+  type          String   // WPS, PQR, SOP, Control Plan, Work Instruction, Calibration Plan
+  status        String   @default("approved") // approved, under-review
+  revision      String
+  effective     String
+  review        String
+  owner         String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Supplier {
+  id            String   @id @default(cuid())
+  supplierId    String   @unique // SUP-001
+  name          String
+  category      String   // Steel, Coating, Welding, Paint, Spare, Service
+  rating        Int      @default(0)
+  tier          String   @default("B") // A, B, C, D
+  onTimeDelivery Int     @default(0)
+  qualityAcceptance Int  @default(0)
+  defectPpm     Int      @default(0)
+  totalOrders   Int      @default(0)
+  openNCRs      Int      @default(0)
+  lastDelivery  DateTime
+  contact       String
+  location      String
+  trend         String   // JSON array of numbers
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model AuditEntry {
+  id            String   @id @default(cuid())
+  auditId       String   @unique // AU-001
+  timestamp     DateTime @default(now())
+  user          String
+  role          String
+  action        String   // create, update, delete, approve, release, hold, complete, acknowledge, login, logout, export
+  module        String
+  entity        String
+  entityId      String
+  plantCode     String?
+  details       String
+  ipAddress     String
+  createdAt     DateTime @default(now())
+
+  @@index([user])
+  @@index([module])
+  @@index([action])
+}
+
+model CustomerOrder {
+  id            String   @id @default(cuid())
+  orderId       String   @unique // CO-001
+  customer      String
+  orderNo       String
+  product       String
+  qty           Int
+  dispatchedQty Int      @default(0)
+  status        String   @default("confirmed") // confirmed, in-production, qc-pending, ready-to-ship, dispatched, delivered
+  poDate        String
+  promisedDate  String
+  dispatchedDate String?
+  deliveryLocation String
+  endTransformer String?
+  serials       String   // JSON array
+  documentation String   // JSON array of {label, status}
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model CostOfQualityItem {
+  id            String   @id @default(cuid())
+  coqId         String   @unique // COQ-001
+  category      String   // prevention, appraisal, internal-failure, external-failure
+  description   String
+  plantCode     String
+  amount        Float
+  period        String
+  trend         Int      @default(0)
+  details       String?
+  createdAt     DateTime @default(now())
+}
+
+model RootCauseAnalysis {
+  id                 String   @id @default(cuid())
+  rcaId              String   @unique // RCA-001
+  title              String
+  problem            String
+  ncrRef             String?
+  plantCode          String
+  stage              String
+  facilitator        String
+  participants       String   // JSON array
+  date               DateTime @default(now())
+  status             String   @default("open") // open, in-progress, verified, closed
+  rootCause          String
+  whys               String   // JSON array of {question, answer}
+  correctiveAction   String
+  preventiveAction   String
+  owner              String
+  dueDate            DateTime
+  effectiveness      String?  // pending, effective, ineffective
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
