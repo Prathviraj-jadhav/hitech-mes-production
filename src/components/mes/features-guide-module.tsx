@@ -184,7 +184,7 @@ export function FeaturesGuideModule() {
             <span>Click to View Guide</span>
           </div>
 
-          <div className="space-y-2 max-h-[780px] overflow-y-auto pr-1">
+          <div className="space-y-2 max-h-[820px] overflow-y-auto custom-scrollbar pr-1.5">
             {filteredGuides.map((guide) => {
               const Icon = ICONS[guide.icon] || HelpCircle;
               const isActive = activeGuide.id === guide.id;
@@ -284,9 +284,33 @@ export function FeaturesGuideModule() {
               </Button>
             </div>
 
-            {/* Section 1: What is it for & Business Value */}
+            {/* Section 1: Why This Module Is Used (Crucial Business Rationale) */}
+            <div className="p-4.5 rounded-xl border border-primary/25 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent space-y-2">
+              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <span>Why This Module Is Used & Business Purpose</span>
+              </div>
+              <p className="text-xs sm:text-sm text-foreground/95 leading-relaxed font-medium">
+                {activeGuide.whyItIsUsed}
+              </p>
+            </div>
+
+            {/* Section 2: Realistic Shop-Floor Scenario */}
+            {activeGuide.shopFloorScenario && (
+              <div className="p-4 rounded-xl border border-border bg-muted/25 space-y-2">
+                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-foreground">
+                  <BookOpen className="h-4 w-4 text-primary" />
+                  <span>Shop-Floor Operational Scenario</span>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed italic bg-background/60 p-3 rounded-lg border border-border/60">
+                  "{activeGuide.shopFloorScenario}"
+                </p>
+              </div>
+            )}
+
+            {/* Section 3: What is it for & Business Value */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="p-4 rounded-xl border border-border bg-muted/20 space-y-1.5">
+              <div className="p-4 rounded-xl border border-border bg-muted/20 space-y-1.5 shadow-xs">
                 <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-foreground">
                   <HelpCircle className="h-4 w-4 text-primary" />
                   <span>What This Feature Is For</span>
@@ -296,19 +320,19 @@ export function FeaturesGuideModule() {
                 </p>
               </div>
 
-              <div className="p-4 rounded-xl border border-primary/20 bg-primary/5 space-y-1.5">
-                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary">
-                  <Sparkles className="h-4 w-4 text-primary" />
+              <div className="p-4 rounded-xl border border-border bg-muted/20 space-y-1.5 shadow-xs">
+                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-success">
+                  <Target className="h-4 w-4 text-success" />
                   <span>Business Impact & ROI</span>
                 </div>
-                <p className="text-xs text-foreground/90 leading-relaxed font-medium">
+                <p className="text-xs text-muted-foreground leading-relaxed font-medium">
                   {activeGuide.businessImpact}
                 </p>
               </div>
             </div>
 
-            {/* Section 2: Roles & Personas */}
-            <div className="p-3.5 rounded-xl border border-border bg-muted/10 space-y-1.5">
+            {/* Section 4: Roles & Personas */}
+            <div className="p-3.5 rounded-xl border border-border bg-muted/10 space-y-1.5 shadow-xs">
               <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-foreground">
                 <Users className="h-4 w-4 text-primary" />
                 <span>Primary Target Personas</span>

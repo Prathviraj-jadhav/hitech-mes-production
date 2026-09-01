@@ -85,8 +85,8 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
       </div>
 
       {/* Modules List */}
-      <ScrollArea className="flex-1 py-2">
-        <nav className="flex flex-col gap-0.5 px-2">
+      <div className="flex-1 overflow-y-auto custom-scrollbar py-2 px-1">
+        <nav className="flex flex-col gap-0.5 px-1">
           {MODULE_GROUPS.map((group) => {
             const groupModules = MODULES.filter((m) =>
               group.moduleIds.includes(m.id) && roleConfig.allowedModules.includes(m.id)
@@ -188,7 +188,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
             );
           })}
         </nav>
-      </ScrollArea>
+      </div>
 
       {/* Guide CTA Footer */}
       <div className="p-2 border-t border-border bg-sidebar-accent/30">

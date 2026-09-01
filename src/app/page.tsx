@@ -61,7 +61,7 @@ import {
 } from "@/components/ui/dialog";
 import { CommandPalette } from "@/components/mes/command-palette";
 import { NotificationDrawer } from "@/components/mes/notification-drawer";
-import { FeatureGuideModal } from "@/components/mes/feature-guide-modal";
+import { FeatureGuideDrawer } from "@/components/mes/feature-guide-drawer";
 import { FeaturesGuideModule } from "@/components/mes/features-guide-module";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -167,7 +167,7 @@ export default function Home() {
       </div>
       <CommandPalette />
       <NotificationDrawer />
-      <FeatureGuideModal />
+      <FeatureGuideDrawer />
     </div>
   );
 }
