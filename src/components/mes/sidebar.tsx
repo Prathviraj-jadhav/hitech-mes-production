@@ -7,7 +7,7 @@ import {
   Star, Monitor, Tv, BookOpen, GitBranch,
   Truck, History, Globe, PackageCheck, CalendarCheck,
   CircleDollarSign, GitFork, TrendingUp, Hourglass,
-  ChevronDown,
+  ChevronDown, HelpCircle, BookOpenCheck,
 } from "lucide-react";
 import { useMESPrefs, MODULES } from "@/lib/mes/store";
 import { ROLE_CONFIGS } from "@/lib/mes/role-config";
@@ -18,7 +18,7 @@ const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   LayoutDashboard, CalendarRange, ClipboardList, Boxes, ShieldCheck,
   Workflow, Cpu, Gauge, Wrench, Zap, Users, FileText, Bell, Monitor,
   Tv, BookOpen, GitBranch, Truck, History, Globe, PackageCheck, CalendarCheck,
-  CircleDollarSign, GitFork, TrendingUp, Hourglass,
+  CircleDollarSign, GitFork, TrendingUp, Hourglass, HelpCircle,
 };
 
 const MODULE_GROUPS: { label: string; moduleIds: string[] }[] = [
@@ -26,7 +26,7 @@ const MODULE_GROUPS: { label: string; moduleIds: string[] }[] = [
   { label: "Quality", moduleIds: ["quality", "cost-quality", "root-cause", "calibration", "documents"] },
   { label: "Shop Floor", moduleIds: ["operator-terminal", "andon", "line-simulator", "iiot", "oee", "shift-handover"] },
   { label: "Support", moduleIds: ["maintenance", "energy", "workforce", "suppliers", "dispatch", "customer-portal"] },
-  { label: "Intelligence", moduleIds: ["forecast", "audit-trail", "dashboards"] },
+  { label: "Intelligence", moduleIds: ["forecast", "audit-trail", "dashboards", "features-guide"] },
 ];
 
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
@@ -117,6 +117,21 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
           })}
         </nav>
       </ScrollArea>
+
+      {/* Guide CTA Footer */}
+      <div className="p-2 border-t border-border bg-sidebar-accent/30">
+        <button
+          onClick={() => {
+            window.dispatchEvent(new CustomEvent("mes:open-feature-guide", { detail: { moduleId: activeModule } }));
+            onNavigate?.();
+          }}
+          className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-semibold bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 transition-swiss"
+        >
+          <HelpCircle className="h-4 w-4 shrink-0" />
+          <span className="flex-1 text-left">How to Use & Guide</span>
+          <span className="text-[10px] uppercase font-mono px-1 rounded bg-primary/20 text-primary font-bold">Shift+?</span>
+        </button>
+      </div>
     </aside>
   );
 }

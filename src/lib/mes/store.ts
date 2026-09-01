@@ -129,6 +129,7 @@ export const MODULES: { id: MESModule; name: string; short: string; description:
   { id: "forecast", name: "Production Forecast", short: "Forecast", description: "What-if scenarios, capacity, risk analysis", icon: "TrendingUp" },
   { id: "wip-aging", name: "WIP Aging & Kanban", short: "WIP Aging", description: "Work-in-progress aging, bottlenecks, Kanban", icon: "Hourglass" },
   { id: "dashboards", name: "Dashboards & Alerts", short: "Dashboards", description: "Role-based, Andon, notifications", icon: "Bell" },
+  { id: "features-guide", name: "Features & User Guide", short: "User Guide", description: "Comprehensive operational manual & workflows", icon: "HelpCircle" },
 ];
 
 export const ROLES: { id: Role; name: string; description: string }[] = [

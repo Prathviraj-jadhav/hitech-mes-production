@@ -61,6 +61,8 @@ import {
 } from "@/components/ui/dialog";
 import { CommandPalette } from "@/components/mes/command-palette";
 import { NotificationDrawer } from "@/components/mes/notification-drawer";
+import { FeatureGuideModal } from "@/components/mes/feature-guide-modal";
+import { FeaturesGuideModule } from "@/components/mes/features-guide-module";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line, AreaChart, Area, ReferenceLine,
@@ -156,6 +158,7 @@ export default function Home() {
               {activeModule === "forecast" && <ForecastModule />}
               {activeModule === "wip-aging" && <WIPAgingModule />}
               {activeModule === "dashboards" && <DashboardsModule />}
+              {activeModule === "features-guide" && <FeaturesGuideModule />}
               </div>
             </PageTransition>
           )}
@@ -164,6 +167,7 @@ export default function Home() {
       </div>
       <CommandPalette />
       <NotificationDrawer />
+      <FeatureGuideModal />
     </div>
   );
 }
@@ -6423,13 +6427,17 @@ function QualityRecordDrawer({
    Shared UI components
    =================================================================== */
 function ModuleHeader({
-  eyebrow, title, description, icon: Icon,
+  eyebrow, title, description, icon: Icon, moduleId,
 }: {
   eyebrow: string;
   title: string;
   description: string;
   icon: React.ComponentType<{ className?: string }>;
+  moduleId?: string;
 }) {
+  const { activeModule } = useMESPrefs();
+  const currentModId = moduleId || activeModule;
+
   return (
     <div className="flex flex-wrap items-end justify-between gap-4">
       <div className="flex items-start gap-3">
@@ -6443,6 +6451,20 @@ function ModuleHeader({
         </div>
       </div>
       <div className="flex items-center gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-1.5 font-semibold text-primary border-primary/30 hover:bg-primary/10 transition-swiss"
+          onClick={() =>
+            window.dispatchEvent(
+              new CustomEvent("mes:open-feature-guide", { detail: { moduleId: currentModId } })
+            )
+          }
+          title="View Feature Guide & Step-by-Step Workflow"
+        >
+          <HelpCircle className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">Feature Guide</span>
+        </Button>
         <Button variant="outline" size="sm" className="gap-1.5" onClick={() => notifySuccess("Exported", "Data exported successfully")}>
           <Download className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Export</span>
         </Button>

@@ -5,10 +5,11 @@ import {
   LayoutDashboard, CalendarRange, ClipboardList, Boxes, ShieldCheck,
   Workflow, Cpu, Gauge, Wrench, Zap, Users, FileText, Bell, Monitor,
   Building2, UserCog, Sun, Moon, Grid3x3, Rows3, Check, Factory,
-  Command as CommandIcon,
+  Command as CommandIcon, HelpCircle, BookOpen,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useMESPrefs, MODULES, PLANTS, ROLES } from "@/lib/mes/store";
+import { MODULE_GUIDES } from "@/lib/mes/feature-guides";
 import type { PlantCode, Role, MESModule, Density } from "@/lib/mes/types";
 import {
   CommandDialog,
@@ -23,7 +24,7 @@ import {
 
 const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   LayoutDashboard, CalendarRange, ClipboardList, Boxes, ShieldCheck,
-  Workflow, Cpu, Gauge, Wrench, Zap, Users, FileText, Bell, Monitor,
+  Workflow, Cpu, Gauge, Wrench, Zap, Users, FileText, Bell, Monitor, HelpCircle, BookOpen,
 };
 
 const DENSITY_OPTIONS: { id: Density; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
@@ -112,6 +113,41 @@ export function CommandPalette() {
               </CommandItem>
             );
           })}
+        </CommandGroup>
+
+        <CommandSeparator />
+
+        {/* Feature Guides */}
+        <CommandGroup heading="Feature Guides & Manuals">
+          <CommandItem
+            value="guide help manual documentation how to use all modules"
+            onSelect={run(() => window.dispatchEvent(new CustomEvent("mes:open-feature-guide")))}
+            className="gap-2.5"
+          >
+            <BookOpen className="h-4 w-4 shrink-0 text-primary" />
+            <div className="flex flex-col">
+              <span className="text-sm font-semibold">Open Full Features & User Guide Center</span>
+              <span className="text-[11px] text-muted-foreground">Search all 26 module workflows, capabilities & KPI targets</span>
+            </div>
+            <CommandShortcut>guide</CommandShortcut>
+          </CommandItem>
+          {MODULE_GUIDES.slice(0, 10).map((g) => (
+            <CommandItem
+              key={`guide-${g.id}`}
+              value={`guide help ${g.name} ${g.short} ${g.tagline}`}
+              onSelect={run(() =>
+                window.dispatchEvent(new CustomEvent("mes:open-feature-guide", { detail: { moduleId: g.id } }))
+              )}
+              className="gap-2.5"
+            >
+              <HelpCircle className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <div className="flex flex-col">
+                <span className="text-sm font-medium">Guide: {g.name}</span>
+                <span className="text-[11px] text-muted-foreground truncate">{g.tagline}</span>
+              </div>
+              <CommandShortcut>view</CommandShortcut>
+            </CommandItem>
+          ))}
         </CommandGroup>
 
         <CommandSeparator />

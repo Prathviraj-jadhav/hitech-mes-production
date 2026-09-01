@@ -4,7 +4,7 @@ import * as React from "react";
 import {
   Search, Bell, Sun, Moon, Grid3x3, Settings2,
   Check, ChevronDown, Building2, UserCog, Clock,
-  Command, AlertTriangle, Menu,
+  Command, AlertTriangle, Menu, HelpCircle,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useMESPrefs, PLANTS, ROLES, MODULES } from "@/lib/mes/store";
@@ -221,6 +221,18 @@ export function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
               {warningAlerts}
             </span>
           )}
+        </Button>
+
+        {/* Feature Guide Help Button */}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => window.dispatchEvent(new CustomEvent("mes:open-feature-guide"))}
+          className="h-9 gap-1.5 px-2.5 font-semibold text-xs text-primary border-primary/30 hover:bg-primary/10 transition-swiss"
+          title="Open Features & Operations Guide (Shift+?)"
+        >
+          <HelpCircle className="h-4 w-4" />
+          <span className="hidden xl:inline">Guide</span>
         </Button>
 
         {/* Settings */}

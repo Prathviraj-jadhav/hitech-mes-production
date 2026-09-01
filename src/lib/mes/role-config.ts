@@ -22,14 +22,14 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
     allowedModules: [
       "overview", "oee", "quality", "traceability", "dispatch",
       "customer-portal", "cost-quality", "suppliers", "audit-trail",
-      "forecast", "dashboards", "energy",
+      "forecast", "dashboards", "energy", "features-guide",
     ],
     kpiFocus: ["Overall OEE", "On-Time Dispatch", "First-Pass Yield", "Scrap Rate"],
     quickActions: [
       { label: "Executive Cockpit", module: "overview", icon: "LayoutDashboard" },
       { label: "OEE Analytics", module: "oee", icon: "Gauge" },
       { label: "Cost of Quality", module: "cost-quality", icon: "CircleDollarSign" },
-      { label: "Forecast", module: "forecast", icon: "TrendingUp" },
+      { label: "User Guide", module: "features-guide", icon: "HelpCircle" },
     ],
   },
   "plant-manager": {
@@ -41,14 +41,14 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
     allowedModules: [
       "overview", "work-orders", "oee", "quality", "maintenance",
       "inventory", "workforce", "andon", "shift-handover", "wip-aging",
-      "energy", "dispatch",
+      "energy", "dispatch", "features-guide",
     ],
     kpiFocus: ["Overall OEE", "Active Work Orders", "Downtime (min)", "Open NCRs"],
     quickActions: [
       { label: "Plant Overview", module: "overview", icon: "LayoutDashboard" },
       { label: "Work Orders", module: "work-orders", icon: "ClipboardList" },
       { label: "Andon Board", module: "andon", icon: "Tv" },
-      { label: "Shift Handover", module: "shift-handover", icon: "BookOpen" },
+      { label: "User Guide", module: "features-guide", icon: "HelpCircle" },
     ],
   },
   planner: {
@@ -59,14 +59,14 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
     defaultModule: "planning",
     allowedModules: [
       "planning", "work-orders", "inventory", "dispatch",
-      "forecast", "wip-aging", "overview", "customer-portal",
+      "forecast", "wip-aging", "overview", "customer-portal", "features-guide",
     ],
     kpiFocus: ["Active Work Orders", "On-Time Dispatch", "Downtime (min)"],
     quickActions: [
       { label: "Planning Board", module: "planning", icon: "CalendarRange" },
       { label: "Work Orders", module: "work-orders", icon: "ClipboardList" },
       { label: "Forecast", module: "forecast", icon: "TrendingUp" },
-      { label: "WIP Aging", module: "wip-aging", icon: "Hourglass" },
+      { label: "User Guide", module: "features-guide", icon: "HelpCircle" },
     ],
   },
   supervisor: {
@@ -78,14 +78,14 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
     allowedModules: [
       "andon", "work-orders", "shift-handover", "wip-aging",
       "line-simulator", "operator-terminal", "oee", "quality",
-      "overview", "iiot",
+      "overview", "iiot", "features-guide",
     ],
     kpiFocus: ["Active Work Orders", "Downtime (min)", "Open NCRs"],
     quickActions: [
       { label: "Andon Board", module: "andon", icon: "Tv" },
       { label: "Line Simulator", module: "line-simulator", icon: "GitBranch" },
       { label: "Shift Handover", module: "shift-handover", icon: "BookOpen" },
-      { label: "WIP Aging", module: "wip-aging", icon: "Hourglass" },
+      { label: "User Guide", module: "features-guide", icon: "HelpCircle" },
     ],
   },
   quality: {
@@ -97,14 +97,14 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
     allowedModules: [
       "quality", "traceability", "calibration", "cost-quality",
       "root-cause", "documents", "suppliers", "audit-trail",
-      "overview",
+      "overview", "features-guide",
     ],
     kpiFocus: ["First-Pass Yield", "Scrap Rate", "Open NCRs", "Traceability Coverage"],
     quickActions: [
       { label: "Quality Mgmt", module: "quality", icon: "ShieldCheck" },
       { label: "NCR / CAPA", module: "quality", icon: "ShieldCheck" },
       { label: "Root Cause", module: "root-cause", icon: "GitFork" },
-      { label: "Calibration", module: "calibration", icon: "CalendarCheck" },
+      { label: "User Guide", module: "features-guide", icon: "HelpCircle" },
     ],
   },
   operator: {
@@ -115,13 +115,14 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
     defaultModule: "operator-terminal",
     allowedModules: [
       "operator-terminal", "work-orders", "andon", "shift-handover",
-      "traceability",
+      "traceability", "features-guide",
     ],
     kpiFocus: ["Active Work Orders"],
     quickActions: [
       { label: "Operator Terminal", module: "operator-terminal", icon: "Monitor" },
       { label: "My Work Orders", module: "work-orders", icon: "ClipboardList" },
       { label: "Shift Handover", module: "shift-handover", icon: "BookOpen" },
+      { label: "User Guide", module: "features-guide", icon: "HelpCircle" },
     ],
   },
   maintenance: {
@@ -132,14 +133,14 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
     defaultModule: "maintenance",
     allowedModules: [
       "maintenance", "iiot", "calibration", "energy",
-      "overview", "oee",
+      "overview", "oee", "features-guide",
     ],
     kpiFocus: ["Downtime (min)", "Overall OEE"],
     quickActions: [
       { label: "Maintenance", module: "maintenance", icon: "Wrench" },
       { label: "Machine / IIoT", module: "iiot", icon: "Cpu" },
       { label: "Calibration", module: "calibration", icon: "CalendarCheck" },
-      { label: "Energy", module: "energy", icon: "Zap" },
+      { label: "User Guide", module: "features-guide", icon: "HelpCircle" },
     ],
   },
   engineer: {
@@ -150,14 +151,14 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
     defaultModule: "oee",
     allowedModules: [
       "oee", "iiot", "quality", "root-cause", "line-simulator",
-      "energy", "overview", "forecast", "wip-aging",
+      "energy", "overview", "forecast", "wip-aging", "features-guide",
     ],
     kpiFocus: ["Overall OEE", "First-Pass Yield", "Scrap Rate"],
     quickActions: [
       { label: "OEE Analytics", module: "oee", icon: "Gauge" },
       { label: "Machine / IIoT", module: "iiot", icon: "Cpu" },
       { label: "Line Simulator", module: "line-simulator", icon: "GitBranch" },
-      { label: "Energy", module: "energy", icon: "Zap" },
+      { label: "User Guide", module: "features-guide", icon: "HelpCircle" },
     ],
   },
 };
