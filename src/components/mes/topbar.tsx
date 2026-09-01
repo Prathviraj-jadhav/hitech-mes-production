@@ -4,7 +4,7 @@ import * as React from "react";
 import {
   Search, Bell, Sun, Moon, Grid3x3, Settings2,
   Check, ChevronDown, Building2, UserCog, Clock,
-  Command, AlertTriangle, Menu, HelpCircle,
+  Command, AlertTriangle, Menu, HelpCircle, PanelLeftClose, PanelLeftOpen,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useMESPrefs, PLANTS, ROLES, MODULES } from "@/lib/mes/store";
@@ -34,7 +34,7 @@ export function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
     activePlant, setPlant, activeRole, setRole,
     timeRange, setTimeRange,
     showGrid, toggleGrid, searchQuery, setSearch,
-    setModule,
+    setModule, sidebarCollapsed, toggleSidebar,
   } = useMESPrefs();
 
   const [mounted, setMounted] = React.useState(false);
@@ -72,6 +72,18 @@ export function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
       >
         <Menu className="h-5 w-5" />
       </Button>
+
+      {/* Desktop Sidebar Toggle */}
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={toggleSidebar}
+        className="h-9 w-9 p-0 hidden md:flex text-muted-foreground hover:text-foreground"
+        title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+      >
+        {sidebarCollapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+      </Button>
+      
       {/* Global Search - prominent, Swiss style */}
       <div className="relative flex-1 max-w-lg">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

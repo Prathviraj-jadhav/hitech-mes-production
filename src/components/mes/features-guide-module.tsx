@@ -178,7 +178,7 @@ export function FeaturesGuideModule() {
       {/* Main Split Layout: Module Directory + Detailed Manual */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left Column: Module Directory List */}
-        <div className="lg:col-span-5 space-y-3">
+        <div className="lg:col-span-4 xl:col-span-4 space-y-3">
           <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-muted-foreground px-1">
             <span>Modules Directory ({filteredGuides.length})</span>
             <span>Click to View Guide</span>
@@ -248,7 +248,7 @@ export function FeaturesGuideModule() {
         </div>
 
         {/* Right Column: In-Depth Operational Manual */}
-        <div className="lg:col-span-7">
+        <div className="lg:col-span-8 xl:col-span-8">
           <Card className="p-6 border-border bg-card shadow-sm space-y-6">
             {/* Guide Header Banner */}
             <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-border">

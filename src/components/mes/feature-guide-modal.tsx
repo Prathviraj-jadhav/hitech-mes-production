@@ -99,19 +99,19 @@ export function FeatureGuideModal() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="max-w-5xl h-[88vh] p-0 flex flex-col gap-0 overflow-hidden border-border bg-card">
+      <DialogContent className="w-[96vw] sm:max-w-5xl lg:max-w-6xl xl:max-w-7xl h-[90vh] p-0 flex flex-col gap-0 overflow-hidden border-border bg-card">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-muted/40 shrink-0">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 border-b border-border bg-muted/40 shrink-0">
           <div className="flex items-center gap-3">
             <div className="grid h-10 w-10 place-items-center bg-primary text-primary-foreground rounded-xl shadow-xs">
               <BookOpen className="h-5 w-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <DialogTitle className="text-lg font-bold tracking-tight">
+                <DialogTitle className="text-base sm:text-lg font-bold tracking-tight">
                   MES Features & Operations Guide
                 </DialogTitle>
-                <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider text-primary border-primary/30">
+                <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider text-primary border-primary/30 hidden sm:inline-flex">
                   Interactive Manual
                 </Badge>
               </div>
@@ -123,9 +123,9 @@ export function FeatureGuideModal() {
         </div>
 
         {/* Main Content Area: Sidebar list + Detail Pane */}
-        <div className="flex flex-1 overflow-hidden">
+        <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
           {/* Left Column: Module Search & Directory */}
-          <div className="w-80 border-r border-border bg-muted/20 flex flex-col shrink-0">
+          <div className="w-full md:w-80 border-b md:border-b-0 md:border-r border-border bg-muted/20 flex flex-col shrink-0 max-h-48 md:max-h-none">
             {/* Search Box */}
             <div className="p-3 border-b border-border">
               <div className="relative">

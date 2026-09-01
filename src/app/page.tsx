@@ -132,7 +132,7 @@ export default function Home() {
             <OperatorTerminalModule />
           ) : (
             <PageTransition moduleKey={activeModule}>
-              <div className="mx-auto max-w-[1600px] p-3 sm:p-4 md:p-6">
+              <div className="mx-auto w-full max-w-[1920px] p-3 sm:p-4 md:p-6 lg:p-7 xl:p-8 2xl:px-10">
                 {activeModule === "overview" && <OverviewModule />}
               {activeModule === "planning" && <PlanningModule />}
               {activeModule === "work-orders" && <WorkOrdersModule workOrders={filteredWorkOrders} />}
@@ -182,7 +182,7 @@ function KPIDrillDialog({ kpiLabel, onClose }: { kpiLabel: string | null; onClos
 
   return (
     <Dialog open={!!kpiLabel} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className="w-[95vw] sm:max-w-3xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
             <BarChart3 className="h-4 w-4" />
@@ -196,7 +196,7 @@ function KPIDrillDialog({ kpiLabel, onClose }: { kpiLabel: string | null; onClos
         {kpi && (
           <div className="space-y-4">
             {/* Summary header */}
-            <div className="grid grid-cols-4 gap-3 p-3 rounded border border-border bg-muted/20">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3 rounded border border-border bg-muted/20">
               <div>
                 <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Current</div>
                 <div className="text-xl font-bold tabular-nums">{kpi.value}{kpi.unit}</div>
@@ -356,7 +356,7 @@ function OverviewModule() {
       ]} />
 
       {/* KPI Row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3">
         {kpis.map((kpi) => (
           <div key={kpi.label} onClick={() => setDrillKPI(kpi.label)} className="cursor-pointer">
             <KPICard
