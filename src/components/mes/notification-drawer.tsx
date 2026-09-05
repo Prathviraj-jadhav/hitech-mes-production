@@ -5,7 +5,7 @@ import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
 } from "@/components/ui/sheet";
 import { useMESPrefs } from "@/lib/mes/store";
-import { ALERTS } from "@/lib/mes/seed";
+import { useMESDataStore } from "@/lib/mes/data-store";
 import { formatDateTime } from "@/lib/mes/date-utils";
 import { cn } from "@/lib/utils";
 import {
@@ -34,14 +34,15 @@ export function NotificationDrawer() {
     setNotifDrawer(open);
   };
 
-  const filtered = ALERTS.filter(a => {
+  const { alerts } = useMESDataStore();
+  const filtered = alerts.filter(a => {
     if (filter !== "all" && a.severity !== filter) return false;
     return true;
   });
 
-  const criticalCount = ALERTS.filter(a => a.severity === "critical").length;
-  const warningCount = ALERTS.filter(a => a.severity === "warning").length;
-  const infoCount = ALERTS.filter(a => a.severity === "info").length;
+  const criticalCount = alerts.filter(a => a.severity === "critical").length;
+  const warningCount = alerts.filter(a => a.severity === "warning").length;
+  const infoCount = alerts.filter(a => a.severity === "info").length;
 
   const severityMeta = {
     critical: { icon: AlertTriangle, color: "text-destructive", bg: "bg-destructive/5", border: "border-destructive/30", label: "Critical" },
@@ -63,7 +64,7 @@ export function NotificationDrawer() {
             Alerts & Reminders
           </SheetTitle>
           <SheetDescription className="text-xs">
-            {ALERTS.length} active alerts - {criticalCount} critical, {warningCount} warnings, {infoCount} info
+            {alerts.length} active alerts - {criticalCount} critical, {warningCount} warnings, {infoCount} info
           </SheetDescription>
         </SheetHeader>
 
@@ -158,13 +159,13 @@ export function NotificationDrawer() {
         {/* Footer */}
         <div className="border-t border-border px-4 py-2.5 flex items-center justify-between bg-muted/20">
           <span className="text-[10px] text-muted-foreground">
-            {acknowledged.size} of {ALERTS.length} acknowledged
+            {acknowledged.size} of {alerts.length} acknowledged
           </span>
           <Button
             size="sm"
             variant="outline"
             className="h-7 text-[10px] gap-1"
-            onClick={() => setAcknowledged(new Set(ALERTS.map(a => a.id)))}
+            onClick={() => setAcknowledged(new Set(alerts.map(a => a.id)))}
           >
             <Check className="h-3 w-3" />
             Ack All

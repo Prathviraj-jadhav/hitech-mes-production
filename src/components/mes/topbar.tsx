@@ -18,7 +18,7 @@ import {
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
   DropdownMenuRadioGroup, DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu";
-import { ALERTS } from "@/lib/mes/seed";
+import { useMESDataStore } from "@/lib/mes/data-store";
 
 const TIME_RANGES = [
   { id: "shift", label: "This shift" },
@@ -40,8 +40,9 @@ export function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const [mounted, setMounted] = React.useState(false);
   React.useEffect(() => setMounted(true), []);
 
-  const criticalAlerts = ALERTS.filter(a => a.severity === "critical" && !a.acknowledged).length;
-  const warningAlerts = ALERTS.filter(a => a.severity === "warning" && !a.acknowledged).length;
+  const { alerts } = useMESDataStore();
+  const criticalAlerts = alerts.filter(a => a.severity === "critical" && !a.acknowledged).length;
+  const warningAlerts = alerts.filter(a => a.severity === "warning" && !a.acknowledged).length;
 
   // Global search suggestions
   const searchSuggestions = React.useMemo(() => {

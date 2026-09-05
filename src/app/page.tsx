@@ -70,6 +70,15 @@ import {
 import { cn } from "@/lib/utils";
 import { notifyAction, notifySuccess, notifyInfo } from "@/lib/mes/toast";
 import { formatTime, formatDateTime, formatDate, formatDateYear, formatDateShort, formatDateWeekday, formatMonthYear } from "@/lib/mes/date-utils";
+import { useMESDataStore } from "@/lib/mes/data-store";
+import {
+  openQualityInspection, openTraceability, openRushOrderModal,
+  openMaterialIntake, openMaintenanceOrder, openCalibrationLockout,
+  openShiftHandover, openFishboneRca, openDispatchManifest,
+  openCoqRoiCalculator, openWipExpedite, openEnergyLoadShed,
+  openExceptionTriage,
+} from "@/lib/mes/events";
+import { GlobalDrawers } from "@/components/mes/drawers/global-drawers";
 
 const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   Activity, AlertTriangle, ArrowUpRight, Boxes, CalendarRange, Cpu,
@@ -85,10 +94,11 @@ export default function Home() {
   const {
     activePlant, activeModule, density, showGrid, searchQuery, activeRole,
   } = useMESPrefs();
+  const { workOrders, machines } = useMESDataStore();
   const [mobileSidebarOpen, setMobileSidebarOpen] = React.useState(false);
 
   const filteredWorkOrders = React.useMemo(() => {
-    return WORK_ORDERS.filter((w) => {
+    return workOrders.filter((w) => {
       if (activePlant !== "ALL" && w.plant !== activePlant) return false;
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
@@ -98,11 +108,11 @@ export default function Home() {
       }
       return true;
     });
-  }, [activePlant, searchQuery]);
+  }, [workOrders, activePlant, searchQuery]);
 
   const filteredMachines = React.useMemo(() => {
-    return MACHINES.filter((m) => activePlant === "ALL" || m.plant === activePlant);
-  }, [activePlant]);
+    return machines.filter((m) => activePlant === "ALL" || m.plant === activePlant);
+  }, [machines, activePlant]);
 
   const densityClass = `density-${density}`;
 
@@ -168,6 +178,7 @@ export default function Home() {
       <CommandPalette />
       <NotificationDrawer />
       <FeatureGuideDrawer />
+      <GlobalDrawers />
     </div>
   );
 }
@@ -283,15 +294,17 @@ function KPIDrillDialog({ kpiLabel, onClose }: { kpiLabel: string | null; onClos
    =================================================================== */
 function OverviewModule() {
   const { activePlant, pinnedKPIs, togglePinnedKPI, activeRole, setModule, setPlant } = useMESPrefs();
+  const { workOrders, machines, alerts, exceptions } = useMESDataStore();
   const roleConfig = ROLE_CONFIGS[activeRole];
   const kpis = KPIS.filter(k => roleConfig.kpiFocus.includes(k.label));
   const allKpis = KPIS;
   const [drillKPI, setDrillKPI] = React.useState<string | null>(null);
   const [selectedPlant, setSelectedPlant] = React.useState<string | null>(null);
-  const activeWOs = WORK_ORDERS.filter(w => ["started", "in-progress", "on-hold"].includes(w.status));
-  const runningMachines = MACHINES.filter(m => m.state === "running").length;
-  const downMachines = MACHINES.filter(m => m.state === "down").length;
-  const criticalAlerts = ALERTS.filter(a => a.severity === "critical").length;
+  const activeWOs = workOrders.filter(w => ["started", "in-progress", "on-hold"].includes(w.status));
+  const runningMachines = machines.filter(m => m.state === "running").length;
+  const downMachines = machines.filter(m => m.state === "down").length;
+  const criticalAlerts = alerts.filter(a => a.severity === "critical").length;
+  const pendingExceptions = exceptions.filter(e => e.status === "pending");
 
   return (
     <div className="space-y-6">
@@ -324,6 +337,67 @@ function OverviewModule() {
         </div>
       </div>
 
+      {/* Executive Workflows Quick Launch Toolbar */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mr-1 shrink-0">
+          Core Workflows:
+        </span>
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-8 gap-1.5 text-xs font-semibold shrink-0 border-primary/40 bg-card hover:bg-primary hover:text-primary-foreground"
+          onClick={() => openQualityInspection()}
+        >
+          <ShieldCheck className="h-3.5 w-3.5 text-primary" />
+          Quality Gate Inspector
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-8 gap-1.5 text-xs font-semibold shrink-0 border-primary/40 bg-card hover:bg-primary hover:text-primary-foreground"
+          onClick={() => openTraceability()}
+        >
+          <Workflow className="h-3.5 w-3.5 text-primary" />
+          10-Stage As-Built Spine
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-8 gap-1.5 text-xs font-semibold shrink-0 border-primary/40 bg-card hover:bg-primary hover:text-primary-foreground"
+          onClick={() => openRushOrderModal()}
+        >
+          <CalendarRange className="h-3.5 w-3.5 text-primary" />
+          Rush Order APS Injector
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-8 gap-1.5 text-xs font-semibold shrink-0 border-primary/40 bg-card hover:bg-primary hover:text-primary-foreground"
+          onClick={() => openMaterialIntake()}
+        >
+          <Boxes className="h-3.5 w-3.5 text-primary" />
+          Raw Material Intake (MTC)
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-8 gap-1.5 text-xs font-semibold shrink-0 border-primary/40 bg-card hover:bg-primary hover:text-primary-foreground"
+          onClick={() => openCoqRoiCalculator()}
+        >
+          <CircleDollarSign className="h-3.5 w-3.5 text-primary" />
+          Cost of Quality ROI
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-8 gap-1.5 text-xs font-semibold shrink-0 border-primary/40 bg-card hover:bg-primary hover:text-primary-foreground"
+          onClick={() => openShiftHandover()}
+        >
+          <BookOpen className="h-3.5 w-3.5 text-primary" />
+          Shift Handover Sign-off
+        </Button>
+      </div>
+
       {/* Role-based quick actions */}
       <div className="flex items-center gap-2 flex-wrap">
         <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mr-1">
@@ -344,12 +418,73 @@ function OverviewModule() {
         })}
       </div>
 
+      {/* Executive Exception Triage Feed ("The Three Things" banner) */}
+      {pendingExceptions.length > 0 && (
+        <div className="rounded-xl border-2 border-primary/40 bg-primary/5 p-4">
+          <div className="flex items-center justify-between gap-2 mb-3">
+            <div className="flex items-center gap-2">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
+                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-primary" />
+              </span>
+              <h2 className="text-xs font-bold uppercase tracking-wider text-primary">
+                Executive Action Center · Top {pendingExceptions.length} Operational Exceptions
+              </h2>
+            </div>
+            <span className="text-[10px] text-muted-foreground">
+              Albos Field Protocol · Strict Countdown SLA Triage
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {pendingExceptions.slice(0, 3).map((exc) => (
+              <div
+                key={exc.id}
+                className="rounded-lg border border-border bg-card p-3 shadow-xs flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-1.5">
+                    <span className={cn(
+                      "px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider",
+                      exc.severity === "critical" ? "bg-primary text-primary-foreground" : "border border-primary text-primary"
+                    )}>
+                      {exc.severity} · {exc.plant}
+                    </span>
+                    <span className="text-[10px] font-mono text-muted-foreground flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      SLA: <span className="font-bold text-primary">{exc.slaMinutes}m</span>
+                    </span>
+                  </div>
+                  <h3 className="text-xs font-bold leading-snug line-clamp-2">{exc.title}</h3>
+                  <p className="text-[11px] text-muted-foreground mt-1 line-clamp-2">{exc.description}</p>
+                  <div className="mt-2 text-[10px] text-muted-foreground">
+                    Owner: <span className="font-semibold text-primary">{exc.owner}</span> · Stage: <span className="font-mono">{exc.stage}</span>
+                  </div>
+                </div>
+
+                <div className="mt-3 pt-2 border-t border-border flex items-center justify-between">
+                  <span className="text-[10px] text-muted-foreground font-mono">{exc.id}</span>
+                  <Button
+                    size="sm"
+                    className="h-7 text-[11px] font-semibold gap-1"
+                    onClick={() => openExceptionTriage(exc)}
+                  >
+                    Triage & Resolve
+                    <ChevronRight className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Live ticker */}
       <LiveTicker items={[
         `OEE ${KPIS[0].value}% · target ${KPIS[0].target}%`,
-        `${WORK_ORDERS.filter(w => w.status === "in-progress").length} WOs in progress`,
-        `${MACHINES.filter(m => m.state === "running").length}/${MACHINES.length} machines running`,
-        `${ALERTS.filter(a => !a.acknowledged).length} unack alerts`,
+        `${workOrders.filter(w => w.status === "in-progress").length} WOs in progress`,
+        `${machines.filter(m => m.state === "running").length}/${machines.length} machines running`,
+        `${alerts.filter(a => !a.acknowledged).length} unack alerts`,
         `HDG-2 bath 452°C · dwell 8.5min`,
         `Shift A · 14:32 IST`,
         `Next handover 18:00`,
@@ -998,8 +1133,9 @@ function LegendDot({ label, solid }: { label: string; solid?: boolean }) {
    =================================================================== */
 function PlanningModule() {
   const { activePlant } = useMESPrefs();
-  const WOs = WORK_ORDERS.filter(w => activePlant === "ALL" || w.plant === activePlant);
-  const lines = Array.from(new Set(WORK_ORDERS.map(w => w.line)));
+  const { workOrders } = useMESDataStore();
+  const WOs = workOrders.filter(w => activePlant === "ALL" || w.plant === activePlant);
+  const lines = Array.from(new Set(workOrders.map(w => w.line)));
 
   // Group WOs by line for Gantt
   const gantt: Record<string, typeof WORK_ORDERS> = {};
@@ -1031,11 +1167,20 @@ function PlanningModule() {
           icon={Layers}
           action={
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" className="h-7 text-[11px] gap-1.5" onClick={() => notifyInfo("Filter", "Filter options coming soon")}>
-                <Filter className="h-3 w-3" /> Filter
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 text-[11px] gap-1.5 border-primary/40 text-primary"
+                onClick={() => openRushOrderModal()}
+              >
+                <Plus className="h-3 w-3" /> Inject Rush Order
               </Button>
-              <Button size="sm" className="h-7 text-[11px] gap-1.5" onClick={() => notifyInfo("What-if Simulation", "Scenario simulator activated")}>
-                <CalendarRange className="h-3 w-3" /> What-if
+              <Button
+                size="sm"
+                className="h-7 text-[11px] gap-1.5"
+                onClick={() => openRushOrderModal()}
+              >
+                <CalendarRange className="h-3 w-3" /> What-if Finite Capacity
               </Button>
             </div>
           }
@@ -1206,19 +1351,45 @@ function WorkOrdersModule({ workOrders }: { workOrders: typeof WORK_ORDERS }) {
           subtitle={`${filtered.length} orders · click a row to view details`}
           icon={ClipboardList}
           action={
-            <div className="flex items-center gap-1">
-              {["all", "in-progress", "on-hold", "completed"].map(s => (
-                <button
-                  key={s}
-                  onClick={() => setStatusFilter(s)}
-                  className={cn(
-                    "px-2 py-1 rounded text-[10px] font-semibold uppercase tracking-wider transition-colors",
-                    statusFilter === s ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent"
-                  )}
-                >
-                  {s.replace("-", " ")}
-                </button>
-              ))}
+            <div className="flex items-center gap-2 flex-wrap">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 text-[10px] gap-1 border-primary/40 text-primary"
+                onClick={() => openQualityInspection()}
+              >
+                <ShieldCheck className="h-3 w-3" /> Inspect Gate
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 text-[10px] gap-1 border-primary/40 text-primary"
+                onClick={() => openTraceability()}
+              >
+                <Workflow className="h-3 w-3" /> Traceability
+              </Button>
+              <Button
+                size="sm"
+                className="h-7 text-[10px] gap-1"
+                onClick={() => openRushOrderModal()}
+              >
+                <Plus className="h-3 w-3" /> Rush Order
+              </Button>
+              <div className="hidden sm:block h-4 w-px bg-border mx-1" />
+              <div className="flex items-center gap-1">
+                {["all", "in-progress", "on-hold", "completed"].map(s => (
+                  <button
+                    key={s}
+                    onClick={() => setStatusFilter(s)}
+                    className={cn(
+                      "px-2 py-1 rounded text-[10px] font-semibold uppercase tracking-wider transition-colors",
+                      statusFilter === s ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent"
+                    )}
+                  >
+                    {s.replace("-", " ")}
+                  </button>
+                ))}
+              </div>
             </div>
           }
         />
@@ -1286,7 +1457,8 @@ function WorkOrdersModule({ workOrders }: { workOrders: typeof WORK_ORDERS }) {
    =================================================================== */
 function InventoryModule() {
   const { activePlant } = useMESPrefs();
-  const items = INVENTORY.filter(i => activePlant === "ALL" || i.plant === activePlant);
+  const { inventory } = useMESDataStore();
+  const items = inventory.filter(i => activePlant === "ALL" || i.plant === activePlant);
   const [selectedItem, setSelectedItem] = React.useState<typeof INVENTORY[number] | null>(null);
 
   return (
@@ -1307,7 +1479,20 @@ function InventoryModule() {
       </div>
 
       <Card className="overflow-hidden">
-        <PanelHeader title="Stock Items" subtitle="Heat-level traceability from intake" icon={Boxes} />
+        <PanelHeader
+          title="Stock Items"
+          subtitle="Heat-level traceability from intake"
+          icon={Boxes}
+          action={
+            <Button
+              size="sm"
+              className="h-7 text-[11px] gap-1.5"
+              onClick={() => openMaterialIntake()}
+            >
+              <Plus className="h-3 w-3" /> Receive Coil / MTC Intake
+            </Button>
+          }
+        />
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead className="bg-muted/40 border-b border-border">
@@ -1426,7 +1611,8 @@ function InventoryModule() {
    =================================================================== */
 function QualityModule() {
   const { activePlant } = useMESPrefs();
-  const records = QUALITY_RECORDS.filter(q => activePlant === "ALL" || q.plant === activePlant);
+  const { qualityRecords, ncrs } = useMESDataStore();
+  const records = qualityRecords.filter(q => activePlant === "ALL" || q.plant === activePlant);
   const passCount = records.filter(r => r.result === "pass").length;
   const failCount = records.filter(r => r.result === "fail").length;
   const holdCount = records.filter(r => r.result === "hold").length;
@@ -1443,19 +1629,28 @@ function QualityModule() {
 
   return (
     <div className="space-y-6">
-      <ModuleHeader
-        eyebrow="Module 04 · ISO 3834-2 / ISO 9001"
-        title="Quality Management & Inspection"
-        description="Quality gates, NCR/CAPA, SPC, welder qualification enforcement"
-        icon={ShieldCheck}
-      />
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <ModuleHeader
+          eyebrow="Module 04 · ISO 3834-2 / ISO 9001"
+          title="Quality Management & Inspection"
+          description="Quality gates, NCR/CAPA, SPC, welder qualification enforcement"
+          icon={ShieldCheck}
+        />
+        <Button
+          size="sm"
+          className="gap-1.5"
+          onClick={() => openQualityInspection()}
+        >
+          <ShieldCheck className="h-3.5 w-3.5" /> Launch Quality Gate Inspector
+        </Button>
+      </div>
 
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         <MiniKPI label="First-Pass Yield" value={`${fpYield}%`} />
         <MiniKPI label="Pass" value={passCount} />
         <MiniKPI label="Fail" value={failCount} />
         <MiniKPI label="On Hold" value={holdCount} />
-        <MiniKPI label="Open NCRs" value={8} />
+        <MiniKPI label="Open NCRs" value={ncrs.filter(n => n.status !== "closed").length} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -1545,7 +1740,7 @@ function QualityModule() {
           title="NCR / CAPA Workflow"
           subtitle="Non-conformance → containment → root cause → CAPA → verify → close"
           icon={ShieldCheck}
-          action={<Button variant="outline" size="sm" className="h-7 text-[11px] gap-1.5" onClick={() => notifyInfo("Raise NCR", "NCR creation form opened")}><Plus className="h-3 w-3" /> Raise NCR</Button>}
+          action={<Button variant="outline" size="sm" className="h-7 text-[11px] gap-1.5" onClick={() => openQualityInspection()}><Plus className="h-3 w-3" /> Raise NCR / Inspect</Button>}
         />
         <div className="overflow-x-auto">
           <div className="grid grid-cols-7 gap-px bg-border min-w-[1100px]">
@@ -1558,7 +1753,7 @@ function QualityModule() {
               { key: "verified", label: "VERIFIED" },
               { key: "closed", label: "CLOSED" },
             ] as const).map(col => {
-              const colNCRs = NCRS.filter(n => n.status === col.key);
+              const colNCRs = ncrs.filter(n => n.status === col.key);
               return (
                 <div key={col.key} className="bg-card min-h-[280px] flex flex-col">
                   {/* Column header */}
@@ -1686,6 +1881,15 @@ function TraceabilityModule() {
             title={`As-built Timeline - ${selectedSerial}`}
             subtitle="Coil → Cut → Form → Weld → Test → Galv → Paint → Assembly → QC → Despatch"
             icon={Workflow}
+            action={
+              <Button
+                size="sm"
+                className="h-7 text-[11px] gap-1.5"
+                onClick={() => openTraceability(selectedSerial)}
+              >
+                <Workflow className="h-3 w-3" /> Full 10-Stage Spine & CoC
+              </Button>
+            }
           />
           <div className="p-4">
             <div className="relative">
@@ -1749,7 +1953,7 @@ function TraceabilityModule() {
             <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Value</label>
             <div className="mt-1 flex gap-2">
               <Input placeholder="e.g., HT-482910" className="font-mono text-sm" />
-              <Button size="sm" className="gap-1.5"><Search className="h-3.5 w-3.5" /> Trace</Button>
+              <Button size="sm" className="gap-1.5" onClick={() => openTraceability(selectedSerial)}><Search className="h-3.5 w-3.5" /> Trace & Contain Batch</Button>
             </div>
           </div>
         </div>
@@ -1955,6 +2159,7 @@ function OEEModule() {
    MODULE: MAINTENANCE
    =================================================================== */
 function MaintenanceModule() {
+  const { maintenance } = useMESDataStore();
   const [selectedMO, setSelectedMO] = React.useState<typeof MAINTENANCE[number] | null>(null);
   return (
     <div className="space-y-6">
@@ -1966,15 +2171,27 @@ function MaintenanceModule() {
       />
 
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        <MiniKPI label="Open WOs" value={MAINTENANCE.filter(m => m.status === "open").length} />
-        <MiniKPI label="Scheduled PM" value={MAINTENANCE.filter(m => m.type === "preventive").length} />
-        <MiniKPI label="Breakdowns" value={MAINTENANCE.filter(m => m.type === "corrective").length} />
+        <MiniKPI label="Open WOs" value={maintenance.filter(m => m.status === "open").length} />
+        <MiniKPI label="Scheduled PM" value={maintenance.filter(m => m.type === "preventive").length} />
+        <MiniKPI label="Breakdowns" value={maintenance.filter(m => m.type === "corrective").length} />
         <MiniKPI label="PM Compliance" value="86%" />
         <MiniKPI label="Avg MTTR" value="5.2h" />
       </div>
 
       <Card className="overflow-hidden">
-        <PanelHeader title="Maintenance Work Orders" icon={Wrench} />
+        <PanelHeader
+          title="Maintenance Work Orders"
+          icon={Wrench}
+          action={
+            <Button
+              size="sm"
+              className="h-7 text-[11px] gap-1.5"
+              onClick={() => openMaintenanceOrder()}
+            >
+              <Plus className="h-3 w-3" /> Schedule PM / CMMS Order
+            </Button>
+          }
+        />
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead className="bg-muted/40 border-b border-border">
@@ -2127,11 +2344,20 @@ function EnergyModule() {
           subtitle="Per-plant kWh trend"
           icon={Zap}
           action={
-            <div className="flex items-center gap-3 text-[10px]">
-              <LegendDot label="K1" solid />
-              <LegendDot label="K2" solid />
-              <LegendDot label="K3" solid />
-              <LegendDot label="R1" solid />
+            <div className="flex items-center gap-3">
+              <Button
+                size="sm"
+                className="h-7 text-[11px] gap-1.5"
+                onClick={() => openEnergyLoadShed()}
+              >
+                <Zap className="h-3 w-3" /> Load Shedding Simulator
+              </Button>
+              <div className="hidden sm:flex items-center gap-3 text-[10px]">
+                <LegendDot label="K1" solid />
+                <LegendDot label="K2" solid />
+                <LegendDot label="K3" solid />
+                <LegendDot label="R1" solid />
+              </div>
             </div>
           }
         />
@@ -2690,9 +2916,14 @@ function ShiftHandoverModule() {
             </button>
           ))}
         </div>
-        <Button size="sm" className="gap-1.5" onClick={() => setShowCompose(!showCompose)}>
-          <Plus className="h-3.5 w-3.5" /> New Entry
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setShowCompose(!showCompose)}>
+            <Plus className="h-3.5 w-3.5" /> Quick Note
+          </Button>
+          <Button size="sm" className="gap-1.5" onClick={() => openShiftHandover()}>
+            <BookOpen className="h-3.5 w-3.5" /> Formal Handover Sign-off
+          </Button>
+        </div>
       </div>
 
       {/* Compose form */}
@@ -3839,13 +4070,22 @@ function DispatchModule() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex gap-2 pt-2 border-t border-border">
-                  <Button size="sm" variant="outline" className="h-7 text-[10px] gap-1 flex-1" onClick={() => notifySuccess("Manifest Downloaded", "Shipping manifest exported")}>
-                    <Download className="h-3 w-3" /> Manifest
+                <div className="flex flex-col gap-2 pt-2 border-t border-border">
+                  <Button
+                    size="sm"
+                    className="h-8 text-xs font-semibold gap-1.5 w-full"
+                    onClick={() => openDispatchManifest(shipment)}
+                  >
+                    <Truck className="h-3.5 w-3.5" /> Dispatch Manifest Verification & Gate Pass
                   </Button>
-                  <Button size="sm" variant="outline" className="h-7 text-[10px] gap-1 flex-1" onClick={() => notifyInfo("Tracking", "Opening carrier tracking portal...")}>
-                    <ExternalLink className="h-3 w-3" /> Track
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" className="h-7 text-[10px] gap-1 flex-1" onClick={() => notifySuccess("Manifest Downloaded", "Shipping manifest exported")}>
+                      <Download className="h-3 w-3" /> Manifest
+                    </Button>
+                    <Button size="sm" variant="outline" className="h-7 text-[10px] gap-1 flex-1" onClick={() => notifyInfo("Tracking", "Opening carrier tracking portal...")}>
+                      <ExternalLink className="h-3 w-3" /> Track
+                    </Button>
+                  </div>
                 </div>
               </div>
             </>
@@ -3933,8 +4173,8 @@ function CalibrationModule() {
             Calendar View
           </button>
         </div>
-        <Button size="sm" className="gap-1.5" onClick={() => notifyInfo("Add Instrument", "Instrument registration form opened")}>
-          <Plus className="h-3.5 w-3.5" /> Add Instrument
+        <Button size="sm" className="gap-1.5" onClick={() => openCalibrationLockout()}>
+          <Plus className="h-3.5 w-3.5" /> Add Instrument / Calibrate
         </Button>
       </div>
 
@@ -3960,7 +4200,7 @@ function CalibrationModule() {
                 {items.map(c => {
                   const daysToDue = Math.ceil((new Date(c.nextDue).getTime() - 1724697600000) / 86400000);
                   return (
-                    <tr key={c.id} className="hover:bg-accent/30">
+                    <tr key={c.id} className="hover:bg-accent/30 cursor-pointer" onClick={() => openCalibrationLockout(c)}>
                       <td className="px-3 py-2.5 font-mono font-bold text-[11px]">{c.tag}</td>
                       <td className="px-3 py-2.5">
                         <div className="font-semibold">{c.instrument}</div>
@@ -4159,12 +4399,21 @@ function CostOfQualityModule() {
 
   return (
     <div className="space-y-6">
-      <ModuleHeader
-        eyebrow="Module · Quality Economics"
-        title="Cost of Quality (PAIF)"
-        description="Prevention · Appraisal · Internal Failure · External Failure - good vs bad quality cost"
-        icon={CircleDollarSign}
-      />
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <ModuleHeader
+          eyebrow="Module · Quality Economics"
+          title="Cost of Quality (PAIF)"
+          description="Prevention · Appraisal · Internal Failure · External Failure - good vs bad quality cost"
+          icon={CircleDollarSign}
+        />
+        <Button
+          size="sm"
+          className="gap-1.5"
+          onClick={() => openCoqRoiCalculator()}
+        >
+          <CircleDollarSign className="h-3.5 w-3.5" /> Launch Prevention ROI Simulator
+        </Button>
+      </div>
 
       {/* KPI strip */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
@@ -4356,12 +4605,21 @@ function RootCauseModule() {
 
   return (
     <div className="space-y-6">
-      <ModuleHeader
-        eyebrow="Module · Continuous Improvement"
-        title="Root Cause Analysis"
-        description="5-Whys · structured problem solving · CAPA effectiveness tracking"
-        icon={GitFork}
-      />
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <ModuleHeader
+          eyebrow="Module · Continuous Improvement"
+          title="Root Cause Analysis"
+          description="5-Whys · structured problem solving · CAPA effectiveness tracking"
+          icon={GitFork}
+        />
+        <Button
+          size="sm"
+          className="gap-1.5"
+          onClick={() => openFishboneRca(rca)}
+        >
+          <Fish className="h-3.5 w-3.5" /> Launch Ishikawa & 5-Why Wizard
+        </Button>
+      </div>
 
       {/* KPI strip */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
@@ -4866,7 +5124,20 @@ function WIPAgingModule() {
 
           {/* WIP items table */}
           <Card className="overflow-hidden">
-            <PanelHeader title="WIP Items" subtitle={`${filtered.length} of ${items.length} items`} icon={Hourglass} />
+            <PanelHeader
+              title="WIP Items"
+              subtitle={`${filtered.length} of ${items.length} items`}
+              icon={Hourglass}
+              action={
+                <Button
+                  size="sm"
+                  className="h-7 text-[11px] gap-1.5"
+                  onClick={() => openWipExpedite(filtered[0])}
+                >
+                  <Hourglass className="h-3 w-3" /> Expedite Stagnant Buffer
+                </Button>
+              }
+            />
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead className="bg-muted/40 border-b border-border">
@@ -4885,7 +5156,7 @@ function WIPAgingModule() {
                 </thead>
                 <tbody className="divide-y divide-border">
                   {filtered.slice(0, 25).map(w => (
-                    <tr key={w.id} className="hover:bg-accent/30">
+                    <tr key={w.id} className="hover:bg-accent/30 cursor-pointer" onClick={() => openWipExpedite(w)}>
                       <td className="px-3 py-2.5 font-mono text-[11px]">{w.serial}</td>
                       <td className="px-3 py-2.5 font-mono text-[11px]">{w.product}</td>
                       <td className="px-3 py-2.5">
@@ -5088,6 +5359,7 @@ function DashboardsModule() {
    =================================================================== */
 function OperatorTerminalModule() {
   const { setModule } = useMESPrefs();
+  const { raiseAndonCall, logScrapAndRework } = useMESDataStore();
   const operator = OPERATORS_DATA[0];
   const wo = React.useMemo(
     () => WORK_ORDERS.find(w => w.status === "in-progress") || WORK_ORDERS.find(w => ["started", "released"].includes(w.status)) || WORK_ORDERS[0],
@@ -5188,7 +5460,20 @@ function OperatorTerminalModule() {
                   return (
                     <button
                       key={opt}
-                      onClick={() => { setAndonRaised(opt); setAndonOpen(false); setRunning(false); }}
+                      onClick={() => {
+                        setAndonRaised(opt);
+                        setAndonOpen(false);
+                        setRunning(false);
+                        raiseAndonCall({
+                          plant: wo.plant,
+                          line: wo.line,
+                          station: wo.currentStage,
+                          issueType: opt,
+                          priority: "critical",
+                          caller: operator.name,
+                        });
+                        notifyInfo("Andon Call Dispatched", `${opt} support paged for Plant ${wo.plant} · ${wo.line}`);
+                      }}
                       className="flex w-full items-center gap-2.5 rounded px-2.5 py-2 text-left text-sm font-medium hover:bg-accent transition-colors"
                     >
                       <Icon className="h-4 w-4" />
@@ -5462,11 +5747,41 @@ function OperatorTerminalModule() {
                   <Pause className="h-5 w-5" />
                   Pause
                 </button>
+                {/* Quick Quality & Scrap Actions */}
+                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 text-[11px] font-semibold gap-1 border-primary/40 text-primary"
+                    onClick={() => openQualityInspection(wo.id, wo.currentStage)}
+                  >
+                    <ShieldCheck className="h-3.5 w-3.5" /> Stage Quality Gate
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 text-[11px] font-semibold gap-1 border-primary/40 text-primary"
+                    onClick={() => openTraceability(wo.id)}
+                  >
+                    <Workflow className="h-3.5 w-3.5" /> Trace Spine
+                  </Button>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full h-8 text-[11px] font-semibold gap-1.5 border-destructive/40 text-destructive hover:bg-destructive/10"
+                  onClick={() => {
+                    logScrapAndRework(wo.id, 1, 0, "Operator terminal manual scrap log");
+                    notifySuccess("Scrap Logged", `1 unit logged as scrap for ${wo.id}`);
+                  }}
+                >
+                  <AlertTriangle className="h-3.5 w-3.5" /> Quick Reject / Scrap 1 pc
+                </Button>
                 {/* COMPLETE - striped pattern + double border */}
                 <button
                   onClick={() => setModule("work-orders")}
                   className={cn(
-                    "relative flex w-full items-center justify-center gap-3 rounded border-2 border-primary py-5 text-base font-bold uppercase tracking-[0.18em] transition-all overflow-hidden",
+                    "relative flex w-full items-center justify-center gap-3 rounded border-2 border-primary py-4 text-sm font-bold uppercase tracking-[0.18em] transition-all overflow-hidden",
                     "bg-background text-primary hover:bg-primary hover:text-primary-foreground"
                   )}
                 >
@@ -5477,7 +5792,7 @@ function OperatorTerminalModule() {
                       backgroundImage: "repeating-linear-gradient(45deg, currentColor 0 6px, transparent 6px 14px)",
                     }}
                   />
-                  <Square className="relative h-5 w-5" />
+                  <Square className="relative h-4 w-4" />
                   <span className="relative">Complete Job</span>
                 </button>
               </div>
@@ -5554,12 +5869,30 @@ function currentStageParams(stage: string): { label: string; value: string; unit
    WORK ORDER DETAIL DRAWER (Sheet)
    =================================================================== */
 function WorkOrderDetailSheet({
-  wo, onClose,
+  wo: initialWo, onClose,
 }: {
   wo: typeof WORK_ORDERS[number] | null;
   onClose: () => void;
 }) {
-  const open = wo !== null;
+  const open = initialWo !== null;
+  const {
+    workOrders,
+    qualityRecords,
+    advanceWorkOrderStage,
+    holdWorkOrder,
+    releaseWorkOrder,
+    completeWorkOrder,
+    logScrapAndRework,
+  } = useMESDataStore();
+
+  const wo = React.useMemo(() => {
+    if (!initialWo) return null;
+    return workOrders.find(w => w.id === initialWo.id) || initialWo;
+  }, [initialWo, workOrders]);
+
+  const [scrapQty, setScrapQty] = React.useState(0);
+  const [reworkQty, setReworkQty] = React.useState(0);
+  const [defectReason, setDefectReason] = React.useState("Pin-hole leak in seam weld");
 
   // Build an as-built timeline: reuse TRACE_EVENTS for this serial if any,
   // otherwise fall back to placeholder stages derived from the WO.
@@ -5587,17 +5920,17 @@ function WorkOrderDetailSheet({
     }));
   }, [wo]);
 
-  // Quality checks performed - filter QUALITY_RECORDS by serial (WO id as serial proxy).
+  // Quality checks performed - filter qualityRecords by serial (WO id as serial proxy).
   const qcForWO = React.useMemo(() => {
     if (!wo) return [];
-    const bySerial = QUALITY_RECORDS.filter(q => q.serial === wo.id);
+    const bySerial = qualityRecords.filter(q => q.serial === wo.id);
     if (bySerial.length > 0) return bySerial;
     // Fallback: last 5 records from the same plant + stage.
-    return QUALITY_RECORDS
+    return qualityRecords
       .filter(q => q.plant === wo.plant)
       .slice(0, 5)
       .map(q => ({ ...q, serial: wo.id }));
-  }, [wo]);
+  }, [wo, qualityRecords]);
 
   const operator = wo?.operator ? OPERATORS_DATA.find(o => o.name === wo.operator) : undefined;
 
@@ -5790,19 +6123,135 @@ function WorkOrderDetailSheet({
                   )}
                 </div>
               </section>
+
+              {/* Scrap & Rework Logging Inline Card */}
+              <section className="rounded-lg border border-border bg-muted/20 p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                    <AlertOctagon className="h-3.5 w-3.5 text-primary" />
+                    Log Scrap & Rework
+                  </span>
+                  <span className="text-[10px] text-muted-foreground">
+                    Enforces yield & scrap rate updates in real-time
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="text-[10px] font-semibold uppercase text-muted-foreground">Scrap Qty (pcs)</label>
+                    <Input
+                      type="number"
+                      min="0"
+                      value={scrapQty || ""}
+                      onChange={(e) => setScrapQty(Number(e.target.value))}
+                      placeholder="0"
+                      className="h-8 text-xs font-mono mt-1"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-semibold uppercase text-muted-foreground">Rework Qty (pcs)</label>
+                    <Input
+                      type="number"
+                      min="0"
+                      value={reworkQty || ""}
+                      onChange={(e) => setReworkQty(Number(e.target.value))}
+                      placeholder="0"
+                      className="h-8 text-xs font-mono mt-1"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-semibold uppercase text-muted-foreground">Defect Reason</label>
+                    <select
+                      value={defectReason}
+                      onChange={(e) => setDefectReason(e.target.value)}
+                      className="w-full h-8 px-2 rounded border border-border bg-background text-xs mt-1"
+                    >
+                      <option>Pin-hole leak in seam weld</option>
+                      <option>Fins pitch distortion / spacing error</option>
+                      <option>Galvanizing ash / flux inclusion</option>
+                      <option>Paint run / sagging (&lt; 140 μm)</option>
+                      <option>Dimension out of tolerance (header box)</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="mt-3 flex justify-end">
+                  <Button
+                    size="sm"
+                    className="h-7 text-xs font-semibold gap-1.5"
+                    onClick={() => {
+                      if (scrapQty > 0 || reworkQty > 0) {
+                        logScrapAndRework(wo.id, scrapQty, reworkQty, defectReason);
+                        notifySuccess("Defect Logged", `Recorded ${scrapQty} scrap & ${reworkQty} rework for ${wo.id}`);
+                        setScrapQty(0);
+                        setReworkQty(0);
+                      } else {
+                        notifyInfo("No quantities entered", "Please specify scrap or rework count.");
+                      }
+                    }}
+                  >
+                    <AlertTriangle className="h-3 w-3" /> Record Scrap/Rework
+                  </Button>
+                </div>
+              </section>
             </div>
 
             <SheetFooter className="border-t border-border bg-muted/30 px-5 py-3 flex-row flex-wrap gap-2 sm:justify-end">
-              <Button variant="outline" size="sm" className="gap-1.5" onClick={() => notifyInfo("Edit Work Order", "Edit form opened")}>
-                <Edit3 className="h-3.5 w-3.5" /> Edit
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 border-primary/40 text-primary hover:bg-accent"
+                onClick={() => openTraceability(wo.id)}
+              >
+                <Workflow className="h-3.5 w-3.5" /> Traceability Spine
               </Button>
-              <Button variant="outline" size="sm" className="gap-1.5" onClick={() => notifySuccess("Print Job Card", "Job card sent to printer")}>
-                <Printer className="h-3.5 w-3.5" /> Print Job Card
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 border-primary/40 text-primary hover:bg-accent"
+                onClick={() => openQualityInspection(wo.id, wo.currentStage)}
+              >
+                <ShieldCheck className="h-3.5 w-3.5" /> Inspect Gate
               </Button>
-              <Button variant="outline" size="sm" className="gap-1.5" onClick={() => notifyInfo("Work Order Held", "WO placed on hold - supervisor notified")}>
-                <Ban className="h-3.5 w-3.5" /> Hold
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5"
+                onClick={() => {
+                  if (wo.status === "on-hold") {
+                    releaseWorkOrder(wo.id);
+                    notifySuccess("Work Order Released", `${wo.id} is now released to production.`);
+                  } else {
+                    holdWorkOrder(wo.id, "Supervisor Quality Hold");
+                    notifyInfo("Work Order Held", `${wo.id} placed on hold.`);
+                  }
+                }}
+              >
+                <Ban className="h-3.5 w-3.5" />
+                {wo.status === "on-hold" ? "Release Hold" : "Hold"}
               </Button>
-              <Button size="sm" className="gap-1.5" onClick={() => notifySuccess("Work Order Completed", "WO marked as complete - moved to closed")}>
+              <Button
+                size="sm"
+                className="gap-1.5"
+                onClick={() => {
+                  const res = advanceWorkOrderStage(wo.id);
+                  if (!res.success) {
+                    notifyInfo("Quality Gate Enforced", res.reason);
+                  } else {
+                    notifySuccess("Stage Advanced", `${wo.id} successfully advanced to next stage.`);
+                  }
+                }}
+              >
+                <ArrowRight className="h-3.5 w-3.5" /> Advance Stage (Gate Check)
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5"
+                onClick={() => {
+                  completeWorkOrder(wo.id);
+                  notifySuccess("Work Order Completed", `${wo.id} marked as complete.`);
+                  onClose();
+                }}
+              >
                 <CheckCircle2 className="h-3.5 w-3.5" /> Complete
               </Button>
             </SheetFooter>

@@ -54,3 +54,8 @@ server.log
 # Skills directory
 /skills/
 .vercel
+documentation/
+*.py
+module_guides.json
+extract_guides.ts
+setup_extractor.js
