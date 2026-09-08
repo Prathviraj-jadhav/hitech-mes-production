@@ -6976,6 +6976,26 @@ function NCRDetailDrawer({
                 </section>
               )}
 
+              {/* Quality Engineer Action Panel */}
+              <section className="mt-8 border-t border-border pt-6">
+                <h3 className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-primary">Quality Engineer Sign-Off</h3>
+                <div className="bg-muted/30 border border-primary/20 rounded-lg p-4 space-y-4">
+                  <div className="flex gap-3 text-xs">
+                    <Button size="sm" className="w-full gap-2">
+                      <CheckCircle2 className="h-4 w-4" /> Approve CAPA
+                    </Button>
+                    <Button size="sm" variant="outline" className="w-full gap-2 text-destructive border-destructive/50 hover:bg-destructive/10">
+                      <Ban className="h-4 w-4" /> Reject & Re-investigate
+                    </Button>
+                  </div>
+                  <div className="pt-2 flex items-center justify-between text-[10px] text-muted-foreground border-t border-border/50">
+                    <div className="flex items-center gap-1.5">
+                      <ShieldCheck className="h-3 w-3" /> Digital Signature Required (CFR Part 11)
+                    </div>
+                  </div>
+                </div>
+              </section>
+
               {/* Meta info */}
               <section>
                 <div className="grid grid-cols-2 gap-3">
