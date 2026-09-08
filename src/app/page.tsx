@@ -64,6 +64,7 @@ import { CommandPalette } from "@/components/mes/command-palette";
 import { NotificationDrawer } from "@/components/mes/notification-drawer";
 import { FeatureGuideDrawer } from "@/components/mes/feature-guide-drawer";
 import { FeaturesGuideModule } from "@/components/mes/features-guide-module";
+import { SowAlignmentModule } from "@/components/mes/sow-alignment-module";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line, AreaChart, Area, ReferenceLine,
@@ -163,6 +164,7 @@ export default function Home() {
               {activeModule === "wip-aging" && <WIPAgingModule />}
               {activeModule === "dashboards" && <DashboardsModule />}
               {activeModule === "features-guide" && <FeaturesGuideModule />}
+              {activeModule === "sow-alignment" && <SowAlignmentModule />}
               </div>
             </PageTransition>
           )}

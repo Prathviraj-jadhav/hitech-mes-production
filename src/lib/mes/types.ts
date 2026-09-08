@@ -38,7 +38,8 @@ export type MESModule =
   | "root-cause"
   | "forecast"
   | "wip-aging"
-  | "features-guide";
+  | "features-guide"
+  | "sow-alignment";
 
 export type Role =
   | "executive"

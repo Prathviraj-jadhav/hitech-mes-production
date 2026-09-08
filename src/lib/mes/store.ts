@@ -123,7 +123,8 @@ export const MODULES: { id: MESModule; name: string; short: string; description:
   { id: "cost-quality", name: "Cost of Quality", short: "Cost of Q", description: "PAIF analysis · prevention · appraisal · failure", icon: "CircleDollarSign" },
   { id: "root-cause", name: "Root Cause Analysis", short: "Root Cause", description: "5-Whys · fishbone · CAPA effectiveness", icon: "GitFork" },
   { id: "forecast", name: "Production Forecast", short: "Forecast", description: "What-if scenarios, capacity, risk analysis", icon: "TrendingUp" },
-  { id: "wip-aging", name: "WIP Aging & Kanban", short: "WIP Aging", description: "Work-in-progress aging, bottlenecks, Kanban", icon: "Hourglass" },
+  { id: "wip-aging", name: "WIP Aging & Flow Analysis", short: "WIP Aging", description: "Real-time bottleneck & staging analytics", icon: "Hourglass" },
+  { id: "sow-alignment", name: "MESA-11 SOW Scope", short: "SOW Scope", description: "Project implementation & feature alignment", icon: "ClipboardCheck" },
   { id: "features-guide", name: "Features & User Guide", short: "User Guide", description: "Comprehensive operational manual & workflows", icon: "HelpCircle" },
 ];
 

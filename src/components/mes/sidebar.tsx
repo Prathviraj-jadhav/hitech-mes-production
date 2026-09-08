@@ -27,7 +27,7 @@ const MODULE_GROUPS: { label: string; moduleIds: string[] }[] = [
   { label: "Quality", moduleIds: ["quality", "cost-quality", "root-cause", "calibration", "documents"] },
   { label: "Shop Floor", moduleIds: ["operator-terminal", "andon", "line-simulator", "iiot", "oee", "shift-handover"] },
   { label: "Support", moduleIds: ["maintenance", "energy", "workforce", "suppliers", "dispatch", "customer-portal"] },
-  { label: "Intelligence", moduleIds: ["forecast", "audit-trail", "features-guide"] },
+  { label: "Intelligence", moduleIds: ["forecast", "audit-trail", "sow-alignment", "features-guide"] },
 ];
 
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {

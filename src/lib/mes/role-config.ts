@@ -22,7 +22,7 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
     allowedModules: [
       "dashboard", "oee", "quality", "traceability", "dispatch",
       "customer-portal", "cost-quality", "suppliers", "audit-trail",
-      "forecast", "energy", "features-guide"
+      "forecast", "energy", "features-guide", "sow-alignment"
     ],
     kpiFocus: ["Overall OEE", "On-Time Dispatch", "First-Pass Yield", "Scrap Rate"],
     quickActions: [
@@ -41,7 +41,7 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
     allowedModules: [
       "dashboard", "work-orders", "oee", "quality", "maintenance",
       "inventory", "workforce", "andon", "shift-handover", "wip-aging",
-      "energy", "dispatch", "features-guide"
+      "energy", "dispatch", "features-guide", "sow-alignment"
     ],
     kpiFocus: ["Overall OEE", "Active Work Orders", "Downtime (min)", "Open NCRs"],
     quickActions: [
@@ -59,7 +59,7 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
     defaultModule: "planning",
     allowedModules: [
       "dashboard", "planning", "work-orders", "inventory", "dispatch",
-      "forecast", "wip-aging", "customer-portal", "features-guide"
+      "forecast", "wip-aging", "customer-portal", "features-guide", "sow-alignment"
     ],
     kpiFocus: ["Active Work Orders", "On-Time Dispatch", "Downtime (min)"],
     quickActions: [
@@ -78,7 +78,7 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
     allowedModules: [
       "andon", "work-orders", "shift-handover", "wip-aging",
       "line-simulator", "operator-terminal", "oee", "quality",
-      "dashboard", "iiot", "features-guide"
+      "dashboard", "iiot", "features-guide", "sow-alignment"
     ],
     kpiFocus: ["Active Work Orders", "Downtime (min)", "Open NCRs"],
     quickActions: [
@@ -97,7 +97,7 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
     allowedModules: [
       "quality", "traceability", "calibration", "cost-quality",
       "root-cause", "documents", "suppliers", "audit-trail",
-      "dashboard", "features-guide"
+      "dashboard", "features-guide", "sow-alignment"
     ],
     kpiFocus: ["First-Pass Yield", "Scrap Rate", "Open NCRs", "Traceability Coverage"],
     quickActions: [
@@ -115,7 +115,7 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
     defaultModule: "operator-terminal",
     allowedModules: [
       "operator-terminal", "work-orders", "andon", "shift-handover",
-      "traceability", "features-guide",
+      "traceability", "features-guide", "sow-alignment",
     ],
     kpiFocus: ["Active Work Orders"],
     quickActions: [
@@ -133,7 +133,7 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
     defaultModule: "maintenance",
     allowedModules: [
       "maintenance", "iiot", "calibration", "energy",
-      "dashboard", "oee", "features-guide",
+      "dashboard", "oee", "features-guide", "sow-alignment",
     ],
     kpiFocus: ["Downtime (min)", "Overall OEE"],
     quickActions: [
@@ -151,7 +151,7 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
     defaultModule: "oee",
     allowedModules: [
       "oee", "iiot", "quality", "root-cause", "line-simulator",
-      "energy", "overview", "forecast", "wip-aging", "features-guide"
+      "energy", "overview", "forecast", "wip-aging", "features-guide", "sow-alignment"
     ],
     kpiFocus: ["Overall OEE", "First-Pass Yield", "Scrap Rate"],
     quickActions: [
