@@ -5,34 +5,32 @@ import { persist } from "zustand/middleware";
 import type { PlantCode, Role, MESModule } from "./types";
 import { ROLE_CONFIGS } from "./role-config";
 
-export type Density = "compact" | "comfortable" | "spacious";
 export type TimeRange = "shift" | "today" | "week" | "month" | "quarter";
+export type Language = "en" | "hi" | "mr";
 
 interface MESPreferences {
   activePlant: PlantCode | "ALL";
   activeRole: Role;
   activeModule: MESModule;
-  density: Density;
   timeRange: TimeRange;
   sidebarCollapsed: boolean;
-  showGrid: boolean;
   favorites: MESModule[];
   pinnedKPIs: string[];
   searchQuery: string;
   notifDrawerOpen: boolean;
+  language: Language;
   // actions
   setPlant: (p: PlantCode | "ALL") => void;
   setRole: (r: Role) => void;
   setModule: (m: MESModule) => void;
-  setDensity: (d: Density) => void;
   setTimeRange: (t: TimeRange) => void;
   toggleSidebar: () => void;
-  toggleGrid: () => void;
   toggleFavorite: (m: MESModule) => void;
   togglePinnedKPI: (k: string) => void;
   setSearch: (q: string) => void;
   toggleNotifDrawer: () => void;
   setNotifDrawer: (open: boolean) => void;
+  setLanguage: (lang: Language) => void;
   // role-based helpers
   getRoleConfig: () => typeof ROLE_CONFIGS[Role];
   isModuleAllowed: (m: MESModule) => boolean;
@@ -44,15 +42,14 @@ export const useMESPrefs = create<MESPreferences>()(
     (set, get) => ({
       activePlant: "ALL",
       activeRole: "executive",
-      activeModule: "overview",
-      density: "comfortable",
+      activeModule: "dashboard",
       timeRange: "today",
       sidebarCollapsed: false,
-      showGrid: true,
-      favorites: ["overview", "oee", "quality", "traceability"],
+      favorites: ["dashboard", "oee", "quality", "traceability"],
       pinnedKPIs: ["oee", "on-time", "fp-yield", "scrap"],
       searchQuery: "",
       notifDrawerOpen: false,
+      language: "en",
       setPlant: (p) => set({ activePlant: p }),
       setRole: (r) => {
         // When role changes, set default plant and module for that role
@@ -64,10 +61,8 @@ export const useMESPrefs = create<MESPreferences>()(
         });
       },
       setModule: (m) => set({ activeModule: m }),
-      setDensity: (d) => set({ density: d }),
       setTimeRange: (t) => set({ timeRange: t }),
       toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
-      toggleGrid: () => set((s) => ({ showGrid: !s.showGrid })),
       toggleFavorite: (m) =>
         set((s) => ({
           favorites: s.favorites.includes(m)
@@ -83,6 +78,7 @@ export const useMESPrefs = create<MESPreferences>()(
       setSearch: (q) => set({ searchQuery: q }),
       toggleNotifDrawer: () => set((s) => ({ notifDrawerOpen: !s.notifDrawerOpen })),
       setNotifDrawer: (open) => set({ notifDrawerOpen: open }),
+      setLanguage: (lang) => set({ language: lang }),
       getRoleConfig: () => ROLE_CONFIGS[get().activeRole],
       isModuleAllowed: (m) => {
         const config = ROLE_CONFIGS[get().activeRole];
@@ -103,7 +99,7 @@ export const PLANTS: { code: PlantCode; name: string; location: string; since: s
 ];
 
 export const MODULES: { id: MESModule; name: string; short: string; description: string; icon: string }[] = [
-  { id: "overview", name: "Executive Cockpit", short: "Overview", description: "Multi-plant consolidated view", icon: "LayoutDashboard" },
+  { id: "dashboard", name: "Executive Cockpit", short: "Dashboard", description: "Multi-plant consolidated view", icon: "LayoutDashboard" },
   { id: "planning", name: "Production Planning & Scheduling", short: "Planning", description: "Finite-capacity APS, Gantt, what-if", icon: "CalendarRange" },
   { id: "work-orders", name: "Work Order Execution", short: "Work Orders", description: "Digital job cards, WIP, Andon", icon: "ClipboardList" },
   { id: "inventory", name: "Material & Inventory", short: "Inventory", description: "Heat tracking, multi-plant stock", icon: "Boxes" },
@@ -128,7 +124,6 @@ export const MODULES: { id: MESModule; name: string; short: string; description:
   { id: "root-cause", name: "Root Cause Analysis", short: "Root Cause", description: "5-Whys · fishbone · CAPA effectiveness", icon: "GitFork" },
   { id: "forecast", name: "Production Forecast", short: "Forecast", description: "What-if scenarios, capacity, risk analysis", icon: "TrendingUp" },
   { id: "wip-aging", name: "WIP Aging & Kanban", short: "WIP Aging", description: "Work-in-progress aging, bottlenecks, Kanban", icon: "Hourglass" },
-  { id: "dashboards", name: "Dashboards & Alerts", short: "Dashboards", description: "Role-based, Andon, notifications", icon: "Bell" },
   { id: "features-guide", name: "Features & User Guide", short: "User Guide", description: "Comprehensive operational manual & workflows", icon: "HelpCircle" },
 ];
 

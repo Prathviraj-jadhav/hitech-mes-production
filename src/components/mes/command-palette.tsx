@@ -10,7 +10,7 @@ import {
 import { useTheme } from "next-themes";
 import { useMESPrefs, MODULES, PLANTS, ROLES } from "@/lib/mes/store";
 import { MODULE_GUIDES } from "@/lib/mes/feature-guides";
-import type { PlantCode, Role, MESModule, Density } from "@/lib/mes/types";
+import type { PlantCode, Role, MESModule } from "@/lib/mes/types";
 import {
   CommandDialog,
   CommandEmpty,
@@ -27,12 +27,6 @@ const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   Workflow, Cpu, Gauge, Wrench, Zap, Users, FileText, Bell, Monitor, HelpCircle, BookOpen,
 };
 
-const DENSITY_OPTIONS: { id: Density; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
-  { id: "compact", label: "Compact", icon: Rows3 },
-  { id: "comfortable", label: "Comfortable", icon: Grid3x3 },
-  { id: "spacious", label: "Spacious", icon: Grid3x3 },
-];
-
 /**
  * CommandPalette - global Cmd+K / Ctrl+K palette for the MES shell.
  * Strictly monochrome. Wraps shadcn Command (cmdk) inside a Dialog.
@@ -48,8 +42,6 @@ export function CommandPalette() {
     activeModule, setModule,
     activePlant, setPlant,
     activeRole, setRole,
-    density, setDensity,
-    showGrid, toggleGrid,
   } = useMESPrefs();
 
   // Listen for Cmd+K / Ctrl+K and the custom open event.
@@ -224,37 +216,6 @@ export function CommandPalette() {
             <span className="text-sm font-medium">Toggle theme</span>
             <CommandShortcut>{theme === "dark" ? "→ light" : "→ dark"}</CommandShortcut>
           </CommandItem>
-
-          <CommandItem
-            value="toggle grid background show hide grid"
-            onSelect={run(toggleGrid)}
-            className="gap-2.5"
-          >
-            <Grid3x3 className="h-4 w-4 shrink-0 text-muted-foreground" />
-            <span className="text-sm font-medium">Toggle grid background</span>
-            <CommandShortcut>{showGrid ? "on → off" : "off → on"}</CommandShortcut>
-          </CommandItem>
-
-          {DENSITY_OPTIONS.map((d) => {
-            const Icon = d.icon;
-            const active = density === d.id;
-            return (
-              <CommandItem
-                key={d.id}
-                value={`density ${d.label}`}
-                onSelect={run(() => setDensity(d.id))}
-                className="gap-2.5"
-              >
-                <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
-                <span className="text-sm font-medium">Density: {d.label}</span>
-                {active ? (
-                  <Check className="ml-auto h-3.5 w-3.5" />
-                ) : (
-                  <CommandShortcut>set</CommandShortcut>
-                )}
-              </CommandItem>
-            );
-          })}
         </CommandGroup>
 
         <CommandSeparator />

@@ -14,6 +14,7 @@ import { DispatchManifestDrawer } from "./dispatch-manifest-drawer";
 import { CoqRoiCalculatorDrawer } from "./coq-roi-calculator-drawer";
 import { WipExpediteDrawer } from "./wip-expedite-drawer";
 import { EnergyLoadShedDrawer } from "./energy-load-shed-drawer";
+import { VoiceAlertDrawer } from "./voice-alert-drawer";
 import type { CalibrationItem, RootCauseAnalysis, Shipment, WIPItem } from "@/lib/mes/types";
 import type { ExceptionItem } from "@/lib/mes/data-store";
 
@@ -165,6 +166,7 @@ export function GlobalDrawers() {
         onClose={() => setExceptionState(s => ({ ...s, open: false }))}
         exception={exceptionState.exception}
       />
+      <VoiceAlertDrawer />
     </>
   );
 }

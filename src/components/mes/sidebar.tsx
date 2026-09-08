@@ -23,11 +23,11 @@ const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
 };
 
 const MODULE_GROUPS: { label: string; moduleIds: string[] }[] = [
-  { label: "Operations", moduleIds: ["overview", "planning", "work-orders", "inventory", "traceability", "wip-aging"] },
+  { label: "Operations", moduleIds: ["dashboard", "planning", "work-orders", "inventory", "traceability", "wip-aging"] },
   { label: "Quality", moduleIds: ["quality", "cost-quality", "root-cause", "calibration", "documents"] },
   { label: "Shop Floor", moduleIds: ["operator-terminal", "andon", "line-simulator", "iiot", "oee", "shift-handover"] },
   { label: "Support", moduleIds: ["maintenance", "energy", "workforce", "suppliers", "dispatch", "customer-portal"] },
-  { label: "Intelligence", moduleIds: ["forecast", "audit-trail", "dashboards", "features-guide"] },
+  { label: "Intelligence", moduleIds: ["forecast", "audit-trail", "features-guide"] },
 ];
 
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {

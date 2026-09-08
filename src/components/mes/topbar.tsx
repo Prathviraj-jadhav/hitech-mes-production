@@ -4,7 +4,7 @@ import * as React from "react";
 import {
   Search, Bell, Sun, Moon, Grid3x3, Settings2,
   Check, ChevronDown, Building2, UserCog, Clock,
-  Command, AlertTriangle, Menu, HelpCircle, PanelLeftClose, PanelLeftOpen,
+  Command, AlertTriangle, Menu, HelpCircle, PanelLeftClose, PanelLeftOpen, BrainCircuit, Globe
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useMESPrefs, PLANTS, ROLES, MODULES } from "@/lib/mes/store";
@@ -19,6 +19,7 @@ import {
   DropdownMenuRadioGroup, DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu";
 import { useMESDataStore } from "@/lib/mes/data-store";
+import { SLMAssistantModal } from "@/components/mes/slm-assistant-modal";
 
 const TIME_RANGES = [
   { id: "shift", label: "This shift" },
@@ -33,11 +34,13 @@ export function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const {
     activePlant, setPlant, activeRole, setRole,
     timeRange, setTimeRange,
-    showGrid, toggleGrid, searchQuery, setSearch,
+    searchQuery, setSearch,
     setModule, sidebarCollapsed, toggleSidebar,
+    language, setLanguage
   } = useMESPrefs();
 
   const [mounted, setMounted] = React.useState(false);
+  const [isSlmOpen, setIsSlmOpen] = React.useState(false);
   React.useEffect(() => setMounted(true), []);
 
   const { alerts } = useMESDataStore();
@@ -194,15 +197,25 @@ export function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* Grid toggle */}
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={toggleGrid}
-          className={cn("h-9 w-9 p-0 hidden sm:flex", showGrid && "bg-accent border-primary")}
-        >
-          <Grid3x3 className="h-4 w-4" />
-        </Button>
+        {/* Language switcher */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="h-9 gap-1.5 font-medium hidden md:flex">
+              <Globe className="h-4 w-4 text-primary" />
+              <span className="uppercase">{language}</span>
+              <ChevronDown className="h-3 w-3 opacity-50" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel className="text-xs uppercase tracking-wider">Language</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuRadioGroup value={language} onValueChange={(v) => setLanguage(v as any)}>
+              <DropdownMenuRadioItem value="en">English (en)</DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="hi">हिंदी (hi)</DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="mr">मराठी (mr)</DropdownMenuRadioItem>
+            </DropdownMenuRadioGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         {/* Theme toggle */}
         {mounted && (
@@ -255,7 +268,21 @@ export function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
         }}>
           <Settings2 className="h-4 w-4" />
         </Button>
+
+        {/* SLM Assistant Trigger */}
+        <Button
+          variant="default"
+          size="sm"
+          onClick={() => setIsSlmOpen(true)}
+          className="h-9 gap-1.5 px-3 font-bold bg-primary text-primary-foreground shadow-xs transition-swiss"
+          title="Private SLM Assistant"
+        >
+          <BrainCircuit className="h-4 w-4" />
+          <span className="hidden xl:inline">AI Assistant</span>
+        </Button>
       </div>
+      
+      <SLMAssistantModal open={isSlmOpen} onOpenChange={setIsSlmOpen} />
     </header>
   );
 }

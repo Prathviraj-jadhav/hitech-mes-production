@@ -292,13 +292,10 @@
     animation: scan 2.5s linear infinite;
   }
 
-  /* Density variants */
-  .density-compact { --density-pad: 0.5rem; --density-gap: 0.5rem; }
-  .density-comfortable { --density-pad: 1rem; --density-gap: 1rem; }
-  .density-spacious { --density-pad: 1.5rem; --density-gap: 1.5rem; }
-
-  /* Swiss design - subtle elevation */
-  .elev-1 { box-shadow: 0 1px 2px 0 oklch(0.22 0.01 240 / 0.05); }
+  /* Theme transitions */
+  * {
+    @apply transition-colors duration-200;
+  }.elev-1 { box-shadow: 0 1px 2px 0 oklch(0.22 0.01 240 / 0.05); }
   .elev-2 { box-shadow: 0 2px 4px -1px oklch(0.22 0.01 240 / 0.06), 0 1px 2px -1px oklch(0.22 0.01 240 / 0.04); }
   .elev-3 { box-shadow: 0 4px 8px -2px oklch(0.22 0.01 240 / 0.08), 0 2px 4px -2px oklch(0.22 0.01 240 / 0.05); }
 

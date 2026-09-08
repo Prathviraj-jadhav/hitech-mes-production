@@ -13,7 +13,7 @@ export interface Plant {
 }
 
 export type MESModule =
-  | "overview"
+  | "dashboard"
   | "planning"
   | "work-orders"
   | "inventory"
@@ -38,7 +38,6 @@ export type MESModule =
   | "root-cause"
   | "forecast"
   | "wip-aging"
-  | "dashboards"
   | "features-guide";
 
 export type Role =

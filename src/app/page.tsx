@@ -43,7 +43,7 @@ import {
   Fish, Search as SearchIcon, Lightbulb, ArrowDownCircle,
   Hourglass, AlertTriangle as AlertTriangleIcon, Layers3, Workflow as WorkflowIcon,
   Zap as ZapIcon2, TrendingUp as TrendingUpIcon, ArrowRightCircle,
-  LayoutDashboard,
+  LayoutDashboard, PhoneCall, Phone, PhoneOff, Bot, Wifi, WifiOff,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -59,6 +59,7 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
+import { toast } from "sonner";
 import { CommandPalette } from "@/components/mes/command-palette";
 import { NotificationDrawer } from "@/components/mes/notification-drawer";
 import { FeatureGuideDrawer } from "@/components/mes/feature-guide-drawer";
@@ -91,9 +92,7 @@ const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
 };
 
 export default function Home() {
-  const {
-    activePlant, activeModule, density, showGrid, searchQuery, activeRole,
-  } = useMESPrefs();
+  const { activeModule, activePlant, activeRole, searchQuery } = useMESPrefs();
   const { workOrders, machines } = useMESDataStore();
   const [mobileSidebarOpen, setMobileSidebarOpen] = React.useState(false);
 
@@ -114,10 +113,8 @@ export default function Home() {
     return machines.filter((m) => activePlant === "ALL" || m.plant === activePlant);
   }, [machines, activePlant]);
 
-  const densityClass = `density-${density}`;
-
   return (
-    <div className={cn("flex h-screen w-full overflow-hidden bg-background", densityClass)}>
+    <div className="flex h-screen w-full overflow-hidden bg-background">
       {/* Mobile sidebar overlay */}
       <div
         className={cn(
@@ -134,16 +131,13 @@ export default function Home() {
       </div>
       <div className="flex flex-1 flex-col overflow-hidden">
         <Topbar onMenuClick={() => setMobileSidebarOpen(true)} />
-        <main className={cn(
-          "flex-1 overflow-y-auto",
-          showGrid && "bg-grid"
-        )}>
+        <main className="flex-1 overflow-y-auto">
           {activeModule === "operator-terminal" ? (
             <OperatorTerminalModule />
           ) : (
             <PageTransition moduleKey={activeModule}>
               <div className="mx-auto w-full max-w-[1920px] p-3 sm:p-4 md:p-6 lg:p-7 xl:p-8 2xl:px-10">
-                {activeModule === "overview" && <OverviewModule />}
+                {activeModule === "dashboard" && <DashboardModule />}
               {activeModule === "planning" && <PlanningModule />}
               {activeModule === "work-orders" && <WorkOrdersModule workOrders={filteredWorkOrders} />}
               {activeModule === "inventory" && <InventoryModule />}
@@ -290,9 +284,9 @@ function KPIDrillDialog({ kpiLabel, onClose }: { kpiLabel: string | null; onClos
 }
 
 /* ===================================================================
-   MODULE: OVERVIEW - Executive Cockpit
+   MODULE: DASHBOARD - Executive Cockpit
    =================================================================== */
-function OverviewModule() {
+function DashboardModule() {
   const { activePlant, pinnedKPIs, togglePinnedKPI, activeRole, setModule, setPlant } = useMESPrefs();
   const { workOrders, machines, alerts, exceptions } = useMESDataStore();
   const roleConfig = ROLE_CONFIGS[activeRole];
@@ -300,11 +294,31 @@ function OverviewModule() {
   const allKpis = KPIS;
   const [drillKPI, setDrillKPI] = React.useState<string | null>(null);
   const [selectedPlant, setSelectedPlant] = React.useState<string | null>(null);
+  const [aiVoiceCallOpen, setAiVoiceCallOpen] = React.useState(false);
   const activeWOs = workOrders.filter(w => ["started", "in-progress", "on-hold"].includes(w.status));
   const runningMachines = machines.filter(m => m.state === "running").length;
   const downMachines = machines.filter(m => m.state === "down").length;
   const criticalAlerts = alerts.filter(a => a.severity === "critical").length;
   const pendingExceptions = exceptions.filter(e => e.status === "pending");
+
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      const mockAlerts = [
+        { title: "Scrap Rate Anomaly", desc: "Line 1 reported 4.2% scrap (threshold 2%).", type: "warning" },
+        { title: "Vibration Warning", desc: "M-K1-002 main bearing vibration exceeded 8mm/s.", type: "critical" },
+        { title: "Cycle Time Drop", desc: "Assembly Line 2 cycle time increased by 15s.", type: "warning" },
+        { title: "Temperature Deviation", desc: "HDG-2 bath temp dropped 3°C below baseline.", type: "critical" },
+      ];
+      const alert = mockAlerts[Math.floor(Math.random() * mockAlerts.length)];
+      
+      toast(alert.title, {
+        description: alert.desc,
+        icon: alert.type === "critical" ? <AlertTriangle className="text-destructive h-4 w-4" /> : <AlertOctagon className="text-warning h-4 w-4" />,
+      });
+    }, 45000); // 45 seconds
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -396,6 +410,15 @@ function OverviewModule() {
           <BookOpen className="h-3.5 w-3.5 text-primary" />
           Shift Handover Sign-off
         </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-8 gap-1.5 text-xs font-semibold shrink-0 border-destructive/60 bg-destructive/5 hover:bg-destructive hover:text-destructive-foreground"
+          onClick={() => setAiVoiceCallOpen(true)}
+        >
+          <PhoneCall className="h-3.5 w-3.5 text-destructive" />
+          Simulate AI Voice Escalation
+        </Button>
       </div>
 
       {/* Role-based quick actions */}
@@ -435,6 +458,8 @@ function OverviewModule() {
               Albos Field Protocol · Strict Countdown SLA Triage
             </span>
           </div>
+          
+          <AIVoiceCallModal open={aiVoiceCallOpen} onOpenChange={setAiVoiceCallOpen} />
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {pendingExceptions.slice(0, 3).map((exc) => (
@@ -1137,9 +1162,40 @@ function PlanningModule() {
   const WOs = workOrders.filter(w => activePlant === "ALL" || w.plant === activePlant);
   const lines = Array.from(new Set(workOrders.map(w => w.line)));
 
-  // Group WOs by line for Gantt
+  // Interactive scheduler state
+  const [localSchedule, setLocalSchedule] = React.useState<Record<string, any>>({});
+  
+  // Group WOs by line for Gantt initially
   const gantt: Record<string, typeof WORK_ORDERS> = {};
   lines.forEach(l => { gantt[l] = WOs.filter(w => w.line === l).slice(0, 5); });
+
+  const handleDragStart = (e: React.DragEvent, id: string, originLine: string) => {
+    e.dataTransfer.setData("application/json", JSON.stringify({ id, originLine }));
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault(); // Necessary to allow dropping
+    e.dataTransfer.dropEffect = "move";
+  };
+
+  const handleDrop = (e: React.DragEvent, targetLine: string, targetCol: number) => {
+    e.preventDefault();
+    try {
+      const data = JSON.parse(e.dataTransfer.getData("application/json"));
+      if (data && data.id) {
+        setLocalSchedule(prev => ({
+          ...prev,
+          [data.id]: { line: targetLine, col: targetCol }
+        }));
+        toast.success("Schedule Updated", {
+          description: `Work order ${data.id} moved to ${targetLine}. Finite capacity recalculated.`,
+        });
+      }
+    } catch (err) {
+      // ignore
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -1208,13 +1264,31 @@ function PlanningModule() {
                   </div>
                 </div>
                 <div className="flex-1 relative h-14 grid grid-cols-7 divide-x divide-border">
+                  {/* Drop zones for columns */}
+                  {[0, 1, 2, 3, 4, 5, 6].map(col => (
+                    <div 
+                      key={col} 
+                      className="h-full w-full"
+                      onDragOver={handleDragOver}
+                      onDrop={(e) => handleDrop(e, line, col)}
+                    />
+                  ))}
+                  
+                  {/* Render items */}
                   {(gantt[line] || []).map((w, i) => {
-                    const startCol = (i * 1.4) % 7;
+                    // Check if it was moved
+                    const override = localSchedule[w.id];
+                    // Only render here if it hasn't been moved to another line, or if this is the target line
+                    if (override && override.line !== line) return null;
+                    
+                    const startCol = override ? override.col : (i * 1.4) % 7;
                     const span = Math.min(3, 7 - startCol);
                     return (
                       <div
                         key={w.id}
-                        className="absolute top-1.5 bottom-1.5 rounded overflow-hidden group cursor-pointer hover:z-10 hover:ring-2 hover:ring-primary/40 transition-all"
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, w.id, line)}
+                        className="absolute top-1.5 bottom-1.5 rounded overflow-hidden group cursor-grab active:cursor-grabbing hover:z-10 hover:ring-2 hover:ring-primary/40 transition-all shadow-sm"
                         style={{
                           left: `${(startCol / 7) * 100}%`,
                           width: `${(span / 7) * 100 - 0.5}%`,
@@ -1226,6 +1300,44 @@ function PlanningModule() {
                           <div className="flex items-center gap-1">
                             <span className="text-[9px] font-mono font-bold truncate">{w.id}</span>
                             {w.priority === "rush" && <span className="text-[8px] font-bold uppercase">Rush</span>}
+                          </div>
+                          <div className="text-[9px] truncate opacity-80">{w.product}</div>
+                          <div className="mt-0.5 h-0.5 bg-current opacity-30 rounded-full overflow-hidden">
+                            <div className="h-full bg-current" style={{ width: `${w.progress}%` }} />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  
+                  {/* Render items that were moved TO this line */}
+                  {Object.entries(localSchedule).map(([id, override]) => {
+                    if (override.line !== line) return null;
+                    // We need to find the WO object to get its details
+                    const w = WOs.find(wo => wo.id === id);
+                    if (!w) return null;
+                    // If it originally belonged to this line, it's already rendered above
+                    if (w.line === line) return null;
+                    
+                    const startCol = override.col;
+                    const span = Math.min(3, 7 - startCol);
+                    return (
+                      <div
+                        key={`moved-${w.id}`}
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, w.id, line)}
+                        className="absolute top-1.5 bottom-1.5 rounded overflow-hidden group cursor-grab active:cursor-grabbing hover:z-10 hover:ring-2 hover:ring-primary/40 transition-all shadow-sm ring-1 ring-primary"
+                        style={{
+                          left: `${(startCol / 7) * 100}%`,
+                          width: `${(span / 7) * 100 - 0.5}%`,
+                          background: w.priority === "rush" ? "var(--foreground)" : w.status === "in-progress" ? "var(--foreground)" : "var(--muted)",
+                          color: w.priority === "rush" || w.status === "in-progress" ? "var(--background)" : "var(--foreground)",
+                        }}
+                      >
+                        <div className="px-2 py-1 h-full flex flex-col justify-center">
+                          <div className="flex items-center gap-1">
+                            <span className="text-[9px] font-mono font-bold truncate">{w.id}</span>
+                            <span className="text-[8px] font-bold uppercase text-primary">Moved</span>
                           </div>
                           <div className="text-[9px] truncate opacity-80">{w.product}</div>
                           <div className="mt-0.5 h-0.5 bg-current opacity-30 rounded-full overflow-hidden">
@@ -1968,16 +2080,72 @@ function TraceabilityModule() {
 /* ===================================================================
    MODULE: IIoT
    =================================================================== */
-function IIoTModule({ machines }: { machines: typeof MACHINES }) {
+function IIoTModule({ machines: initialMachines }: { machines: typeof MACHINES }) {
   const [selectedMachine, setSelectedMachine] = React.useState<typeof MACHINES[number] | null>(null);
+  const [machines, setMachines] = React.useState(initialMachines);
+  const [isNetworkDropped, setIsNetworkDropped] = React.useState(false);
+  const [bufferSize, setBufferSize] = React.useState(0);
+
+  // Live streaming simulator
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      if (isNetworkDropped) {
+        setBufferSize(prev => prev + 24); // Simulate 24 datapoints buffered per tick
+        return;
+      }
+      
+      if (bufferSize > 0) {
+        toast.success("Edge Buffer Synced", { description: `${bufferSize} data points synced from local edge gateway to cloud historian.` });
+        setBufferSize(0);
+      }
+      
+      setMachines(prev => prev.map(m => {
+        if (m.state === "down") return m;
+        // Jitter parameters slightly to simulate live feed
+        const newParams = m.parameters.map(p => {
+          const val = Number(p.value);
+          if (isNaN(val)) return p;
+          const jitter = (Math.random() - 0.5) * (val * 0.02); // 2% fluctuation
+          return { ...p, value: (val + jitter).toFixed(1) };
+        });
+        return { ...m, parameters: newParams };
+      }));
+    }, 2500);
+    
+    return () => clearInterval(interval);
+  }, [isNetworkDropped, bufferSize]);
+
   return (
     <div className="space-y-6">
-      <ModuleHeader
-        eyebrow="Module 06 · ISA-95 Level 2"
-        title="Machine / IIoT Connectivity"
-        description="OPC-UA, Modbus TCP, MQTT - edge gateway streaming, parameter capture"
-        icon={Cpu}
-      />
+      <div className="flex items-start justify-between">
+        <ModuleHeader
+          eyebrow="Module 06 · ISA-95 Level 2"
+          title="Machine / IIoT Connectivity"
+          description="OPC-UA, Modbus TCP, MQTT - edge gateway streaming, parameter capture"
+          icon={Cpu}
+        />
+        <div className="flex flex-col items-end gap-2 bg-muted/40 p-3 rounded-lg border border-border">
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-semibold">Simulate Cloud Disconnect</span>
+            <button 
+              onClick={() => setIsNetworkDropped(!isNetworkDropped)}
+              className={cn("w-10 h-5 rounded-full relative transition-colors duration-200", isNetworkDropped ? "bg-destructive" : "bg-primary")}
+            >
+              <div className={cn("absolute w-3 h-3 bg-white rounded-full top-1 transition-transform duration-200", isNetworkDropped ? "translate-x-6" : "translate-x-1")} />
+            </button>
+          </div>
+          {isNetworkDropped && (
+            <div className="text-[10px] text-destructive flex items-center gap-1.5 font-bold animate-pulse">
+              <WifiOff className="h-3 w-3" /> Cloud disconnected · Edge buffering: {bufferSize} msgs
+            </div>
+          )}
+          {!isNetworkDropped && (
+            <div className="text-[10px] text-success flex items-center gap-1.5">
+              <Wifi className="h-3 w-3" /> Link Active · MQTT streaming
+            </div>
+          )}
+        </div>
+      </div>
 
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         <MiniKPI label="Connected" value={`${machines.length} / 13`} />
@@ -3413,56 +3581,177 @@ function SuppliersModule() {
         ))}
       </div>
 
-      {/* Selected supplier detail */}
-      {selected && (
-        <Card className="overflow-hidden border-2 border-primary/20">
-          <PanelHeader
-            title={`Supplier Detail - ${selected.name}`}
-            subtitle={`${selected.id} · ${selected.category} · Tier ${selected.tier}`}
-            icon={Truck}
-            action={<Button variant="outline" size="sm" className="h-7 text-[11px]" onClick={() => setSelectedSupplier(null)}>Close</Button>}
-          />
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-border">
-            <div className="bg-card p-4">
-              <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Performance Metrics</div>
-              <div className="space-y-2">
-                <MetricRow label="Overall Rating" value={`${selected.rating}/100`} ratio={selected.rating} />
-                <MetricRow label="On-Time Delivery" value={`${selected.onTimeDelivery}%`} ratio={selected.onTimeDelivery} />
-                <MetricRow label="Quality Acceptance" value={`${selected.qualityAcceptance}%`} ratio={selected.qualityAcceptance} />
-                <MetricRow label="Defect Rate" value={`${selected.defectPpm} PPM`} ratio={100 - (selected.defectPpm / 10)} invert />
+      {/* Selected supplier drawer */}
+      <Sheet open={!!selectedSupplier} onOpenChange={(open) => { if (!open) setSelectedSupplier(null); }}>
+        <SheetContent className="sm:max-w-[700px] w-full p-0 flex flex-col gap-0 border-l border-primary/20">
+          <SheetHeader className="p-4 border-b border-border bg-card">
+            <SheetTitle className="flex items-center gap-2">
+              <Truck className="h-5 w-5 text-primary" />
+              {selected?.name}
+            </SheetTitle>
+            <SheetDescription className="flex items-center gap-2 text-xs">
+              <span className="font-mono">{selected?.id}</span>
+              <span>·</span>
+              <span>{selected?.category}</span>
+              <span>·</span>
+              <span className="font-bold">Tier {selected?.tier}</span>
+            </SheetDescription>
+          </SheetHeader>
+          <ScrollArea className="flex-1">
+            {selected && (
+              <div className="p-4">
+                <Tabs defaultValue="overview" className="w-full">
+                  <TabsList className="w-full grid grid-cols-4 mb-6">
+                    <TabsTrigger value="overview" className="text-xs">Overview</TabsTrigger>
+                    <TabsTrigger value="quality" className="text-xs">NCRs & Quality</TabsTrigger>
+                    <TabsTrigger value="deliveries" className="text-xs">Shipments</TabsTrigger>
+                    <TabsTrigger value="certs" className="text-xs">Certifications</TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="overview" className="space-y-6 mt-0">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {/* Performance Metrics */}
+                      <div className="bg-muted/20 border border-border rounded-lg p-4">
+                        <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">Performance Metrics</div>
+                        <div className="space-y-3">
+                          <MetricRow label="Overall Rating" value={`${selected.rating}/100`} ratio={selected.rating} />
+                          <MetricRow label="On-Time Delivery" value={`${selected.onTimeDelivery}%`} ratio={selected.onTimeDelivery} />
+                          <MetricRow label="Quality Acceptance" value={`${selected.qualityAcceptance}%`} ratio={selected.qualityAcceptance} />
+                          <MetricRow label="Defect Rate" value={`${selected.defectPpm} PPM`} ratio={100 - (selected.defectPpm / 10)} invert />
+                        </div>
+                      </div>
+    
+                      {/* Order History */}
+                      <div className="bg-muted/20 border border-border rounded-lg p-4">
+                        <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">Order History</div>
+                        <div className="space-y-2.5 text-xs">
+                          <div className="flex justify-between"><span className="text-muted-foreground">Total Orders</span><span className="font-bold tabular-nums">{selected.totalOrders}</span></div>
+                          <div className="flex justify-between"><span className="text-muted-foreground">Open NCRs</span><span className="font-bold tabular-nums text-destructive">{selected.openNCRs}</span></div>
+                          <div className="flex justify-between"><span className="text-muted-foreground">Last Delivery</span><span className="tabular-nums font-mono">{formatDate(selected.lastDelivery)}</span></div>
+                          <div className="flex justify-between"><span className="text-muted-foreground">Contact</span><span className="font-mono text-[10px] text-primary">{selected.contact}</span></div>
+                          <div className="flex justify-between"><span className="text-muted-foreground">Location</span><span>{selected.location}</span></div>
+                        </div>
+                      </div>
+                    </div>
+    
+                    {/* Rating Trend Chart */}
+                    <div className="bg-muted/20 border border-border rounded-lg p-4">
+                      <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">Rating Trend (6 months)</div>
+                      <div className="h-[200px] w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <AreaChart data={selected.trend.map((v, i) => ({ month: ["Apr", "May", "Jun", "Jul", "Aug", "Sep"][i], value: v }))} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
+                            <defs>
+                              <linearGradient id="supGrad" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stopColor="currentColor" stopOpacity={0.3} className="text-primary" />
+                                <stop offset="100%" stopColor="currentColor" stopOpacity={0} className="text-primary" />
+                              </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" stroke="currentColor" strokeOpacity={0.08} vertical={false} className="text-primary" />
+                            <XAxis dataKey="month" tick={{ fontSize: 10 }} stroke="currentColor" strokeOpacity={0.3} className="text-primary" tickLine={false} axisLine={false} />
+                            <YAxis tick={{ fontSize: 10 }} stroke="currentColor" strokeOpacity={0.3} className="text-primary" domain={[70, 100]} tickLine={false} axisLine={false} />
+                            <Tooltip contentStyle={{ backgroundColor: "var(--background)", border: "1px solid var(--border)", borderRadius: 6, fontSize: 11 }} />
+                            <Area type="monotone" dataKey="value" stroke="currentColor" strokeWidth={2} fill="url(#supGrad)" className="text-primary" />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="quality" className="space-y-4 mt-0">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="text-sm font-bold">Non-Conformance Reports (NCRs)</h3>
+                      <Button size="sm" variant="outline" className="h-7 text-[10px]"><Plus className="h-3 w-3 mr-1"/> Log NCR</Button>
+                    </div>
+                    {selected.openNCRs === 0 ? (
+                      <EmptyState icon={ShieldCheck} title="Zero Open NCRs" description="This supplier has a clean quality record for the active period." />
+                    ) : (
+                      <div className="space-y-3">
+                        {Array.from({ length: selected.openNCRs }).map((_, i) => (
+                          <div key={i} className="bg-destructive/5 border border-destructive/20 rounded-lg p-3">
+                            <div className="flex justify-between items-start mb-2">
+                              <div>
+                                <div className="text-xs font-bold text-destructive">NCR-2026-09-0{i+1}</div>
+                                <div className="text-[10px] text-muted-foreground mt-0.5">Dimensional variance on received batch.</div>
+                              </div>
+                              <Badge variant="destructive" className="text-[9px]">Open</Badge>
+                            </div>
+                            <div className="flex justify-between text-[10px] text-muted-foreground mt-3 pt-3 border-t border-destructive/10">
+                              <span>Action: Root Cause Analysis Pending</span>
+                              <span className="font-mono">Opened: {formatDate(new Date(Date.now() - 86400000 * (i + 2)).toISOString())}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </TabsContent>
+
+                  <TabsContent value="deliveries" className="space-y-4 mt-0">
+                    <h3 className="text-sm font-bold mb-2">Recent Shipments</h3>
+                    <div className="space-y-2">
+                      {[1, 2, 3, 4, 5].map((i) => (
+                        <div key={i} className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/20">
+                          <div className="flex items-center gap-3">
+                            <div className={cn("p-1.5 rounded", i <= 4 ? "bg-success/20 text-success" : "bg-destructive/20 text-destructive")}>
+                              <PackageCheck className="h-4 w-4" />
+                            </div>
+                            <div>
+                              <div className="text-xs font-bold">ASN-10{90 - i}</div>
+                              <div className="text-[10px] text-muted-foreground">Gate receipt • {i*10} tons</div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className={cn("text-[10px] font-bold uppercase tracking-wider", i <= 4 ? "text-success" : "text-destructive")}>
+                              {i <= 4 ? "On-Time" : "Delayed (2 days)"}
+                            </div>
+                            <div className="text-[10px] text-muted-foreground font-mono">{formatDate(new Date(Date.now() - 86400000 * 7 * i).toISOString())}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="certs" className="space-y-4 mt-0">
+                    <h3 className="text-sm font-bold mb-2">Compliance & Certificates</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="border border-border rounded-lg p-3 bg-muted/20">
+                        <div className="flex justify-between items-start mb-2">
+                          <div className="text-xs font-bold">ISO 9001:2015</div>
+                          <Badge variant="outline" className="text-success border-success/40 bg-success/10 text-[9px]">Valid</Badge>
+                        </div>
+                        <div className="text-[10px] text-muted-foreground mt-3 pt-3 border-t border-border flex justify-between">
+                          <span>Expiry</span>
+                          <span className="font-mono">Dec 2027</span>
+                        </div>
+                      </div>
+                      <div className="border border-border rounded-lg p-3 bg-muted/20">
+                        <div className="flex justify-between items-start mb-2">
+                          <div className="text-xs font-bold">Material Test Certs (MTC)</div>
+                          <Badge variant="outline" className="text-success border-success/40 bg-success/10 text-[9px]">100% Traceable</Badge>
+                        </div>
+                        <div className="text-[10px] text-muted-foreground mt-3 pt-3 border-t border-border flex justify-between">
+                          <span>Latest</span>
+                          <span className="font-mono">EN 10204 3.1</span>
+                        </div>
+                      </div>
+                      <div className="border border-border rounded-lg p-3 bg-muted/20 sm:col-span-2">
+                        <div className="flex justify-between items-start mb-2">
+                          <div className="text-xs font-bold">Supplier Quality Agreement (SQA)</div>
+                          <Badge variant="outline" className="text-success border-success/40 bg-success/10 text-[9px]">Signed</Badge>
+                        </div>
+                        <div className="text-[10px] text-muted-foreground mt-3 pt-3 border-t border-border flex justify-between">
+                          <span>Signed Date</span>
+                          <span className="font-mono">Jan 2025</span>
+                        </div>
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                </Tabs>
               </div>
-            </div>
-            <div className="bg-card p-4">
-              <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Order History</div>
-              <div className="space-y-2 text-xs">
-                <div className="flex justify-between"><span className="text-muted-foreground">Total Orders</span><span className="font-bold tabular-nums">{selected.totalOrders}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Open NCRs</span><span className="font-bold tabular-nums">{selected.openNCRs}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Last Delivery</span><span className="tabular-nums">{formatDate(selected.lastDelivery)}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Contact</span><span className="font-mono text-[10px]">{selected.contact}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Location</span><span>{selected.location}</span></div>
-              </div>
-            </div>
-            <div className="bg-card p-4">
-              <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Rating Trend (6 months)</div>
-              <ResponsiveContainer width="100%" height={140}>
-                <AreaChart data={selected.trend.map((v, i) => ({ month: ["Apr", "May", "Jun", "Jul", "Aug", "Sep"][i], value: v }))} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="supGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="currentColor" stopOpacity={0.3} className="text-primary" />
-                      <stop offset="100%" stopColor="currentColor" stopOpacity={0} className="text-primary" />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid stroke="currentColor" strokeOpacity={0.08} vertical={false} className="text-primary" />
-                  <XAxis dataKey="month" tick={{ fontSize: 9 }} stroke="currentColor" strokeOpacity={0.3} className="text-primary" />
-                  <YAxis tick={{ fontSize: 9 }} stroke="currentColor" strokeOpacity={0.3} className="text-primary" domain={[70, 100]} />
-                  <Tooltip contentStyle={{ backgroundColor: "var(--background)", border: "1px solid var(--border)", borderRadius: 4, fontSize: 10 }} />
-                  <Area type="monotone" dataKey="value" stroke="currentColor" strokeWidth={2} fill="url(#supGrad)" className="text-primary" />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        </Card>
-      )}
+            )}
+          </ScrollArea>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
@@ -3618,32 +3907,6 @@ function AuditTrailModule() {
                       <td className="px-3 py-2.5 text-[11px] max-w-md truncate text-muted-foreground">{a.details}</td>
                       <td className="px-3 py-2.5 font-mono text-[10px] text-muted-foreground">{a.ipAddress}</td>
                     </tr>
-                    {expanded && (
-                      <tr className="bg-muted/20">
-                        <td colSpan={8} className="px-6 py-4">
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                              <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Event Details</div>
-                              <div className="space-y-1 text-xs">
-                                <div><span className="text-muted-foreground">Audit ID:</span> <span className="font-mono font-bold">{a.id}</span></div>
-                                <div><span className="text-muted-foreground">Timestamp (UTC):</span> <span className="tabular-nums">{new Date(a.timestamp).toISOString()}</span></div>
-                                <div><span className="text-muted-foreground">User:</span> <span className="font-semibold">{a.user}</span> ({a.role})</div>
-                                <div><span className="text-muted-foreground">Entity:</span> <span className="font-mono">{a.entity} · {a.entityId}</span></div>
-                                <div><span className="text-muted-foreground">IP Address:</span> <span className="font-mono">{a.ipAddress}</span></div>
-                              </div>
-                            </div>
-                            <div>
-                              <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Full Description</div>
-                              <p className="text-xs leading-relaxed">{a.details}</p>
-                              <div className="mt-3 flex items-center gap-2 text-[10px] text-muted-foreground">
-                                <Lock className="h-3 w-3" />
-                                <span>Tamper-evident · hash: SHA-256 · chained to previous entry</span>
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
                   </React.Fragment>
                 );
               })}
@@ -3658,6 +3921,143 @@ function AuditTrailModule() {
           <span className="font-mono">Last verified: {"--:--:--"}</span>
         </div>
       </Card>
+
+      {/* Selected Audit Record Drawer */}
+      <Sheet open={!!showDetails} onOpenChange={(open) => { if (!open) setShowDetails(null); }}>
+        <SheetContent className="sm:max-w-[700px] w-full p-0 flex flex-col gap-0 border-l border-primary/20">
+          {(() => {
+            const selected = AUDIT_TRAIL.find(a => a.id === showDetails);
+            if (!selected) return null;
+            const meta = actionMeta[selected.action] || actionMeta.update;
+            const Icon = meta.icon;
+
+            return (
+              <>
+                <SheetHeader className="p-4 border-b border-border bg-card">
+                  <SheetTitle className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <ShieldCheck className="h-5 w-5 text-primary" />
+                      <span>Audit Record {selected.id}</span>
+                    </div>
+                    <span className={cn(
+                      "inline-flex items-center gap-1 h-5 px-1.5 rounded text-[10px] font-bold uppercase tracking-wider",
+                      ["delete", "reject"].includes(selected.action) ? "border-2 border-primary" :
+                      ["create", "approve", "complete"].includes(selected.action) ? "bg-primary text-primary-foreground" :
+                      ["hold"].includes(selected.action) ? "border-2 border-primary" :
+                      "bg-muted text-primary"
+                    )}>
+                      <Icon className="h-3 w-3" />
+                      {meta.label}
+                    </span>
+                  </SheetTitle>
+                  <SheetDescription className="flex items-center gap-2 text-xs">
+                    <span className="font-mono">{new Date(selected.timestamp).toISOString()}</span>
+                    <span>·</span>
+                    <span className="font-bold text-primary">{selected.user} ({selected.role})</span>
+                  </SheetDescription>
+                </SheetHeader>
+                <ScrollArea className="flex-1">
+                  <div className="p-4 space-y-6">
+                    
+                    {/* Security Verification */}
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="bg-success/10 border border-success/20 rounded-lg p-2.5 flex flex-col items-center justify-center text-center">
+                        <Fingerprint className="h-4 w-4 text-success mb-1.5" />
+                        <div className="text-[9px] font-bold uppercase tracking-wider text-success">MFA Verified</div>
+                        <div className="text-[8px] text-muted-foreground mt-0.5">Biometric (FIDO2)</div>
+                      </div>
+                      <div className="bg-success/10 border border-success/20 rounded-lg p-2.5 flex flex-col items-center justify-center text-center">
+                        <MapPin className="h-4 w-4 text-success mb-1.5" />
+                        <div className="text-[9px] font-bold uppercase tracking-wider text-success">Known Location</div>
+                        <div className="text-[8px] text-muted-foreground mt-0.5">IP matches profile</div>
+                      </div>
+                      <div className="bg-success/10 border border-success/20 rounded-lg p-2.5 flex flex-col items-center justify-center text-center">
+                        <Monitor className="h-4 w-4 text-success mb-1.5" />
+                        <div className="text-[9px] font-bold uppercase tracking-wider text-success">Trusted Device</div>
+                        <div className="text-[8px] text-muted-foreground mt-0.5">Corporate Managed</div>
+                      </div>
+                    </div>
+
+                    {/* Entity Details */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-muted/20 border border-border rounded-lg p-3">
+                        <div className="text-[9px] uppercase tracking-wider text-muted-foreground mb-1">Module & Entity</div>
+                        <div className="text-sm font-semibold">{selected.module}</div>
+                        <div className="text-xs font-mono mt-0.5">{selected.entity} · {selected.entityId}</div>
+                      </div>
+                      <div className="bg-muted/20 border border-border rounded-lg p-3">
+                        <div className="text-[9px] uppercase tracking-wider text-muted-foreground mb-1">Session Data</div>
+                        <div className="text-xs">
+                          <span className="text-muted-foreground">IP:</span> <span className="font-mono">{selected.ipAddress}</span>
+                        </div>
+                        <div className="text-xs mt-0.5">
+                          <span className="text-muted-foreground">Plant:</span> <span className="font-mono">{selected.plant || "Global"}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Timeline */}
+                    <div>
+                      <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">Event Timeline</div>
+                      <div className="relative pl-3 border-l-2 border-muted space-y-4">
+                        <div className="relative">
+                          <div className="absolute -left-[17px] top-1 h-2.5 w-2.5 rounded-full border-2 border-background bg-primary"></div>
+                          <p className="text-xs font-semibold">User Authentication</p>
+                          <p className="text-[10px] text-muted-foreground font-mono">{new Date(new Date(selected.timestamp).getTime() - 150000).toISOString()}</p>
+                        </div>
+                        <div className="relative">
+                          <div className="absolute -left-[17px] top-1 h-2.5 w-2.5 rounded-full border-2 border-background bg-primary"></div>
+                          <p className="text-xs font-semibold">Access Granted: {selected.module}</p>
+                          <p className="text-[10px] text-muted-foreground font-mono">{new Date(new Date(selected.timestamp).getTime() - 25000).toISOString()}</p>
+                        </div>
+                        <div className="relative">
+                          <div className="absolute -left-[17px] top-1 h-2.5 w-2.5 rounded-full border-2 border-background bg-primary animate-pulse"></div>
+                          <p className="text-xs font-semibold text-primary">Action Executed: {meta.label}</p>
+                          <p className="text-[10px] text-muted-foreground font-mono">{new Date(selected.timestamp).toISOString()}</p>
+                          <p className="text-xs text-muted-foreground mt-1 leading-snug">{selected.details}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* JSON Diff */}
+                    <div className="bg-muted/20 border border-border rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">State Changes (JSON Diff)</div>
+                        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                          <Lock className="h-3 w-3" />
+                          <span>Tamper-evident (SHA-256)</span>
+                        </div>
+                      </div>
+                      <div className="bg-[#1e1e1e] rounded-md p-3 overflow-x-auto text-left font-mono text-[11px] leading-relaxed">
+                        <span className="text-gray-400">{"{"}</span>
+                        <div className="pl-4">
+                          <div className="text-gray-300"><span className="text-[#9cdcfe]">"entityId"</span>: <span className="text-[#ce9178]">"{selected.entityId}"</span>,</div>
+                          <div className="text-gray-300"><span className="text-[#9cdcfe]">"action"</span>: <span className="text-[#ce9178]">"{selected.action}"</span>,</div>
+                          {selected.action === "update" ? (
+                            <>
+                              <div className="text-gray-300"><span className="text-[#9cdcfe]">"changes"</span>: {"{"}</div>
+                              <div className="pl-4">
+                                <div className="text-red-400 bg-red-400/10">- <span className="text-[#9cdcfe]">"status"</span>: <span className="text-[#ce9178]">"pending"</span></div>
+                                <div className="text-green-400 bg-green-400/10">+ <span className="text-[#9cdcfe]">"status"</span>: <span className="text-[#ce9178]">"approved"</span></div>
+                              </div>
+                              <div className="text-gray-300">{"}"}</div>
+                            </>
+                          ) : (
+                            <div className="text-gray-300"><span className="text-[#9cdcfe]">"payload"</span>: <span className="text-[#ce9178]">"&lt;encrypted_blob_v2&gt;"</span></div>
+                          )}
+                        </div>
+                        <span className="text-gray-400">{"}"}</span>
+                      </div>
+                    </div>
+
+                  </div>
+                </ScrollArea>
+              </>
+            );
+          })()}
+        </SheetContent>
+      </Sheet>
+
     </div>
   );
 }
@@ -6821,6 +7221,74 @@ function QualityRecordDrawer({
                 </div>
               </section>
 
+              {/* 3D / Image Inspection View */}
+              <section>
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Visual Inspection (3D / Camera)</h3>
+                  <div className="flex gap-1">
+                    <span className="inline-flex items-center rounded-sm bg-primary/20 px-1.5 py-0.5 text-[8px] font-bold text-primary uppercase">Defect Tags</span>
+                  </div>
+                </div>
+                <div className="relative rounded-lg border border-border bg-black/90 aspect-video overflow-hidden group">
+                  {/* Simulated 3D Model / Image */}
+                  <div className="absolute inset-0 flex items-center justify-center opacity-60">
+                    <Monitor className="h-16 w-16 text-muted-foreground/30" />
+                  </div>
+                  {/* Defect tags (mock) */}
+                  {record.result !== "pass" && (
+                    <>
+                      <div className="absolute top-[30%] left-[45%] group-hover:scale-110 transition-transform">
+                        <div className="relative">
+                          <span className="absolute -left-1 -top-1 flex h-3 w-3">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-3 w-3 bg-destructive border border-background"></span>
+                          </span>
+                          <div className="mt-3 bg-background/95 backdrop-blur-sm border border-destructive px-2 py-1 rounded text-[9px] font-semibold shadow-lg whitespace-nowrap">
+                            Pinholes detected
+                          </div>
+                        </div>
+                      </div>
+                      <div className="absolute top-[65%] left-[20%] group-hover:scale-110 transition-transform">
+                        <div className="relative">
+                          <span className="absolute -left-1 -top-1 flex h-3 w-3">
+                            <span className="relative inline-flex rounded-full h-3 w-3 bg-warning border border-background"></span>
+                          </span>
+                          <div className="mt-3 bg-background/95 backdrop-blur-sm border border-warning px-2 py-1 rounded text-[9px] font-semibold shadow-lg whitespace-nowrap">
+                            Uneven thickness
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                  {record.result === "pass" && (
+                    <div className="absolute bottom-3 right-3 bg-success/20 text-success border border-success/30 px-2 py-1 rounded text-[10px] font-bold flex items-center gap-1.5 backdrop-blur-md">
+                      <CheckCircle2 className="h-3 w-3" />
+                      Visual Pass
+                    </div>
+                  )}
+                  <div className="absolute bottom-3 left-3 text-[9px] font-mono text-muted-foreground bg-background/80 px-1.5 py-0.5 rounded backdrop-blur-sm">
+                    CAM_K4_TOP_02
+                  </div>
+                </div>
+              </section>
+
+              {/* Disposition Workflow */}
+              {record.result !== "pass" && (
+                <section>
+                  <h3 className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Disposition Workflow</h3>
+                  <div className="rounded border border-border bg-card p-3 space-y-3">
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline" className="flex-1 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground">Scrap</Button>
+                      <Button size="sm" variant="outline" className="flex-1 border-warning text-warning hover:bg-warning hover:text-warning-foreground">Rework</Button>
+                      <Button size="sm" variant="outline" className="flex-1">Use-As-Is</Button>
+                    </div>
+                    <div className="text-[10px] text-muted-foreground text-center">
+                      Requires Level 2 Quality Engineer approval
+                    </div>
+                  </div>
+                </section>
+              )}
+
               {/* Notes */}
               {record.notes && (
                 <section>
@@ -6955,3 +7423,153 @@ function MetricBox({ label, value, unit, spec }: { label: string; value: string 
 }
 
 // (no custom ReferenceLine - using recharts' built-in)
+
+/* ===================================================================
+   AI VOICE CALL ALERT MODAL (SIMULATION)
+   =================================================================== */
+function AIVoiceCallModal({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) {
+  const [callState, setCallState] = React.useState<"ringing" | "connected" | "ended">("ringing");
+  const [transcript, setTranscript] = React.useState<{speaker: "ai" | "user", text: string}[]>([]);
+
+  React.useEffect(() => {
+    if (!open) {
+      setCallState("ringing");
+      setTranscript([]);
+    }
+  }, [open]);
+
+  const answerCall = () => {
+    setCallState("connected");
+    
+    // Simulate conversation
+    setTimeout(() => {
+      setTranscript(prev => [...prev, { speaker: "ai", text: "Hello Prathviraj, this is the MES Sentinel AI. I am escalating a critical anomaly." }]);
+    }, 500);
+
+    setTimeout(() => {
+      setTranscript(prev => [...prev, { speaker: "ai", text: "The HDG-2 Galvanizing bath temperature has dropped 3°C below the lower specification limit of 445°C." }]);
+    }, 2500);
+
+    setTimeout(() => {
+      setTranscript(prev => [...prev, { speaker: "user", text: "Understood. Has production been halted?" }]);
+    }, 5000);
+
+    setTimeout(() => {
+      setTranscript(prev => [...prev, { speaker: "ai", text: "Yes, I have triggered an interlock on the overhead hoist. I have also drafted a Level-1 Maintenance Ticket. Do you approve the ticket dispatch?" }]);
+    }, 7000);
+
+    setTimeout(() => {
+      setTranscript(prev => [...prev, { speaker: "user", text: "Yes, approve the ticket and notify the shift supervisor." }]);
+    }, 10000);
+
+    setTimeout(() => {
+      setTranscript(prev => [...prev, { speaker: "ai", text: "Ticket dispatched. The event is logged in the Audit Trail with your voice acknowledgement. Goodbye." }]);
+    }, 12500);
+
+    setTimeout(() => {
+      setCallState("ended");
+    }, 15000);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className={cn("sm:max-w-md", callState === "ringing" ? "border-destructive border-2" : "border-border")} closeClassName="hidden">
+        {callState === "ringing" && (
+          <div className="flex flex-col items-center justify-center p-6 space-y-6">
+            <div className="relative">
+              <span className="absolute -inset-4 animate-ping rounded-full bg-destructive opacity-20"></span>
+              <span className="absolute -inset-2 animate-ping rounded-full bg-destructive opacity-40 animation-delay-150"></span>
+              <div className="relative bg-destructive text-destructive-foreground h-16 w-16 rounded-full flex items-center justify-center shadow-lg">
+                <PhoneCall className="h-8 w-8 animate-pulse" />
+              </div>
+            </div>
+            
+            <div className="text-center space-y-1">
+              <h2 className="text-xl font-bold text-destructive animate-pulse">Incoming Critical Escalation</h2>
+              <p className="text-sm font-mono text-muted-foreground">Source: MES Sentinel AI Agent</p>
+            </div>
+
+            <div className="flex gap-4 w-full pt-4">
+              <Button onClick={() => onOpenChange(false)} variant="outline" className="flex-1 border-destructive text-destructive hover:bg-destructive/10 h-12">
+                Ignore
+              </Button>
+              <Button onClick={answerCall} className="flex-1 bg-success hover:bg-success/90 text-success-foreground h-12 gap-2 text-lg">
+                <Phone className="h-5 w-5" /> Answer
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {callState === "connected" && (
+          <div className="flex flex-col h-[400px]">
+            <div className="flex items-center justify-between p-4 border-b border-border bg-muted/20">
+              <div className="flex items-center gap-3">
+                <div className="bg-primary/20 p-2 rounded-full">
+                  <Bot className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold">MES Sentinel AI</h3>
+                  <div className="flex items-center gap-1.5 text-[10px] text-success font-semibold uppercase tracking-wider">
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-success"></span>
+                    </span>
+                    Call Connected · Encrypted
+                  </div>
+                </div>
+              </div>
+              <div className="font-mono text-xs text-muted-foreground">00:00:12</div>
+            </div>
+
+            <ScrollArea className="flex-1 p-4">
+              <div className="space-y-4">
+                {transcript.map((msg, idx) => (
+                  <div key={idx} className={cn("flex w-full", msg.speaker === "user" ? "justify-end" : "justify-start")}>
+                    <div className={cn(
+                      "max-w-[80%] rounded-lg px-3 py-2 text-sm",
+                      msg.speaker === "user" ? "bg-primary text-primary-foreground" : "bg-muted border border-border"
+                    )}>
+                      {msg.text}
+                    </div>
+                  </div>
+                ))}
+                <div className="flex justify-start">
+                  {transcript.length < 6 && (
+                    <div className="bg-muted border border-border rounded-lg px-3 py-2 text-sm flex items-center gap-1">
+                      <span className="h-1.5 w-1.5 bg-muted-foreground rounded-full animate-bounce"></span>
+                      <span className="h-1.5 w-1.5 bg-muted-foreground rounded-full animate-bounce" style={{animationDelay: "0.2s"}}></span>
+                      <span className="h-1.5 w-1.5 bg-muted-foreground rounded-full animate-bounce" style={{animationDelay: "0.4s"}}></span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </ScrollArea>
+
+            <div className="p-4 border-t border-border flex justify-center bg-muted/10">
+              <Button onClick={() => setCallState("ended")} variant="outline" className="border-destructive text-destructive hover:bg-destructive/10 h-10 w-full gap-2">
+                <PhoneOff className="h-4 w-4" /> End Call
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {callState === "ended" && (
+          <div className="flex flex-col items-center justify-center p-8 space-y-4 text-center">
+            <div className="bg-muted p-4 rounded-full">
+              <CheckCircle2 className="h-8 w-8 text-muted-foreground" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold">Call Ended</h3>
+              <p className="text-xs text-muted-foreground mt-1 max-w-[250px]">
+                The incident has been logged. Action items have been dispatched to the relevant teams.
+              </p>
+            </div>
+            <Button onClick={() => onOpenChange(false)} className="mt-4 w-full">
+              Close
+            </Button>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}

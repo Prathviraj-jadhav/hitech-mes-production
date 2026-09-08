@@ -18,15 +18,15 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
     name: "Executive",
     description: "MD / Leadership - multi-plant cockpit",
     defaultPlant: "ALL",
-    defaultModule: "overview",
+    defaultModule: "dashboard",
     allowedModules: [
-      "overview", "oee", "quality", "traceability", "dispatch",
+      "dashboard", "oee", "quality", "traceability", "dispatch",
       "customer-portal", "cost-quality", "suppliers", "audit-trail",
-      "forecast", "dashboards", "energy", "features-guide",
+      "forecast", "energy", "features-guide"
     ],
     kpiFocus: ["Overall OEE", "On-Time Dispatch", "First-Pass Yield", "Scrap Rate"],
     quickActions: [
-      { label: "Executive Cockpit", module: "overview", icon: "LayoutDashboard" },
+      { label: "Executive Dashboard", module: "dashboard", icon: "LayoutDashboard" },
       { label: "OEE Analytics", module: "oee", icon: "Gauge" },
       { label: "Cost of Quality", module: "cost-quality", icon: "CircleDollarSign" },
       { label: "User Guide", module: "features-guide", icon: "HelpCircle" },
@@ -37,15 +37,15 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
     name: "Plant Manager",
     description: "Single-plant operations oversight",
     defaultPlant: "K1",
-    defaultModule: "overview",
+    defaultModule: "dashboard",
     allowedModules: [
-      "overview", "work-orders", "oee", "quality", "maintenance",
+      "dashboard", "work-orders", "oee", "quality", "maintenance",
       "inventory", "workforce", "andon", "shift-handover", "wip-aging",
-      "energy", "dispatch", "features-guide",
+      "energy", "dispatch", "features-guide"
     ],
     kpiFocus: ["Overall OEE", "Active Work Orders", "Downtime (min)", "Open NCRs"],
     quickActions: [
-      { label: "Plant Overview", module: "overview", icon: "LayoutDashboard" },
+      { label: "Plant Dashboard", module: "dashboard", icon: "LayoutDashboard" },
       { label: "Work Orders", module: "work-orders", icon: "ClipboardList" },
       { label: "Andon Board", module: "andon", icon: "Tv" },
       { label: "User Guide", module: "features-guide", icon: "HelpCircle" },
@@ -58,8 +58,8 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
     defaultPlant: "ALL",
     defaultModule: "planning",
     allowedModules: [
-      "planning", "work-orders", "inventory", "dispatch",
-      "forecast", "wip-aging", "overview", "customer-portal", "features-guide",
+      "dashboard", "planning", "work-orders", "inventory", "dispatch",
+      "forecast", "wip-aging", "customer-portal", "features-guide"
     ],
     kpiFocus: ["Active Work Orders", "On-Time Dispatch", "Downtime (min)"],
     quickActions: [
@@ -78,7 +78,7 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
     allowedModules: [
       "andon", "work-orders", "shift-handover", "wip-aging",
       "line-simulator", "operator-terminal", "oee", "quality",
-      "overview", "iiot", "features-guide",
+      "dashboard", "iiot", "features-guide"
     ],
     kpiFocus: ["Active Work Orders", "Downtime (min)", "Open NCRs"],
     quickActions: [
@@ -97,7 +97,7 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
     allowedModules: [
       "quality", "traceability", "calibration", "cost-quality",
       "root-cause", "documents", "suppliers", "audit-trail",
-      "overview", "features-guide",
+      "dashboard", "features-guide"
     ],
     kpiFocus: ["First-Pass Yield", "Scrap Rate", "Open NCRs", "Traceability Coverage"],
     quickActions: [
@@ -133,7 +133,7 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
     defaultModule: "maintenance",
     allowedModules: [
       "maintenance", "iiot", "calibration", "energy",
-      "overview", "oee", "features-guide",
+      "dashboard", "oee", "features-guide",
     ],
     kpiFocus: ["Downtime (min)", "Overall OEE"],
     quickActions: [
@@ -151,7 +151,7 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
     defaultModule: "oee",
     allowedModules: [
       "oee", "iiot", "quality", "root-cause", "line-simulator",
-      "energy", "overview", "forecast", "wip-aging", "features-guide",
+      "energy", "overview", "forecast", "wip-aging", "features-guide"
     ],
     kpiFocus: ["Overall OEE", "First-Pass Yield", "Scrap Rate"],
     quickActions: [
